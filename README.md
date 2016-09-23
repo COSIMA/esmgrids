@@ -2,7 +2,7 @@
 
 Python representation of Earth System Model grids.
 
-Grids currently suported:
+Grids currently supported:
 
 - Global regular Lat-Lon
 - Global tri-polar
@@ -11,4 +11,8 @@ Grids currently suported:
 - GODAS reanalysis
 - ORAS4 reanalysis
 
+There is code but not tested/used:
+
+- CICE4.1 tri-polar
+- Unified Model
 
