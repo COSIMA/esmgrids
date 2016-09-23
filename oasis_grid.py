@@ -1,4 +1,6 @@
 
+from base_grid import BaseGrid
+
 def normalise_lons(lons):
     """
     Make a copy of lons that is between -180 and 180.
@@ -95,122 +97,25 @@ def oasis_to_2d_corners(input_clons, input_clats):
     return output_clons, output_clats 
 
 
-class OASISGrid:
+class OasisGrid(BaseGrid)
     """
-    This class creates 3 files: 
-        - areas.nc grid cell areas for atmos (t, u, v) and ice. 
-        - masks.nc land sea mask for atmos (t, u, v) and ice. 
-        - grids.nc lat, lon, rotation angle and corners for atmos (t, u, v) and
-          ice.
+    Python representation of OASIS grid including:
+        - grid cell centre and corners
+        - grid cell area
+        - grid cell masking
     """
 
-    def __init__(self, atm, ice, output_dir):
-        self.atm = atm
-        self.ice = ice
+    def __init__(self, grid_name, model_grid):
+        self.name = grid_name
+        # Arakawa A, B or C grids.
+        self.grid_type = model_grid.type
 
-        self.areas_filename = os.path.join(output_dir, 'areas.nc')
-        self.masks_filename = os.path.join(output_dir, 'masks.nc')
-        self.grids_filename = os.path.join(output_dir, 'grids.nc')
 
-    def make_areas(self):
+    def write_grids(self, grids_filename):
         """
-        Make netcdf file areas.nc with cice.srf, um1t.srf, um1u.srf, um1v.srf
         """
 
-        ice = self.ice
-        atm = self.atm
-
-        f = nc.Dataset(self.areas_filename, 'w')
-
-        f.createDimension('nyi', ice.num_lat_points)
-        f.createDimension('nxi', ice.num_lon_points)
-        f.createDimension('nyat', atm.num_lat_points)
-        f.createDimension('nxat', atm.num_lon_points)
-        f.createDimension('nyau', atm.num_lat_points)
-        f.createDimension('nxau', atm.num_lon_points)
-        f.createDimension('nyav', atm.num_lat_points - 1)
-        f.createDimension('nxav', atm.num_lon_points)
-
-        cice_srf = f.createVariable('cice.srf', 'f8', dimensions=('nyi', 'nxi'))
-        cice_srf.units = 'm^2'
-        cice_srf.title = 'cice grid T-cell area.'
-        um1t_srf = f.createVariable('um1t.srf', 'f8',
-                                    dimensions=('nyat', 'nxat'))
-        um1t_srf.units = 'm^2'
-        um1t_srf.title = 'um1t grid area.'
-        um1u_srf = f.createVariable('um1u.srf', 'f8',
-                                    dimensions=('nyau', 'nxau'))
-        um1u_srf.units = 'm^2'
-        um1u_srf.title = 'um1u grid area.'
-        um1v_srf = f.createVariable('um1v.srf', 'f8',
-                                    dimensions=('nyav', 'nxav'))
-        um1v_srf.units = 'm^2'
-        um1v_srf.title = 'um1v grid area.'
-
-        cice_srf[:] = self.ice.area_t[:]
-        um1t_srf[:] = atm.area_t[:]
-        um1u_srf[:] = atm.area_u[:]
-        um1v_srf[:] = atm.area_v[:]
-
-        f.close()
-
-
-    def make_masks(self):
-
-        f = nc.Dataset(self.masks_filename, 'w')
-
-        f.createDimension('ny0', self.ice.num_lat_points)
-        f.createDimension('nx0', self.ice.num_lon_points)
-        f.createDimension('ny1', self.atm.num_lat_points)
-        f.createDimension('nx1', self.atm.num_lon_points)
-        f.createDimension('ny2', self.atm.num_lat_points - 1)
-        f.createDimension('nx2', self.atm.num_lon_points)
-
-        # Make the ice mask.
-        mask = f.createVariable('cice.msk', 'int32', dimensions=('ny0', 'nx0'))
-        mask.units = '0/1:o/l'
-        mask.title = 'Ice grid T-cell land-sea mask.'
-        # Flip the mask. OASIS uses 1 = masked, 0 = unmasked.
-        mask[:] = (1 - self.ice.mask[:]) 
-
-        # Atm t mask.
-        mask_t = f.createVariable('um1t.msk', 'int32', dimensions=('ny1', 'nx1'))
-        mask_t.units = '0/1:o/l'
-        mask_t.title = 'Atm grid T-cell land-sea mask.'
-        # Build the mask using the atm land fraction. 
-        mask_t[:] = np.copy(self.atm.landfrac)
-        mask_t[np.where(self.atm.landfrac[:] != 1)] = 0
-
-        # Atm u mask.
-        mask_u = f.createVariable('um1u.msk', 'int32', dimensions=('ny1', 'nx1'))
-        mask_u.units = '0/1:o/l'
-        mask_u.title = 'Atm grid U-cell land-sea mask.'
-        mask_u[:] = mask_t[:]
-        # Hack? make u mask by adding land points onto Western land bounary.
-        for i in range(mask_u.shape[0]):
-            for j in range(mask_u.shape[1] - 1):
-                if mask_u[i, j+1] == 1:
-                    mask_u[i, j] = 1
-
-        # Atm v mask.
-        mask_v = f.createVariable('um1v.msk', 'int32', dimensions=('ny2', 'nx2'))
-        mask_v.units = '0/1:o/l'
-        mask_v.title = 'Atm grid V-cell land-sea mask.'
-        mask_v[:] = mask_t[:-1,:]
-        # Hack? make v mask by adding land points onto Southern land bounary.
-        for i in range(mask_v.shape[0] - 1):
-            for j in range(mask_v.shape[1]):
-                if mask_v[i+1, j] == 1:
-                    mask_v[i, j] = 1
-
-        f.close()
-
-    def make_grids(self):
-        """
-        lat, lon, and corners for atmos (t, u, v) and ice.
-        """
-
-        f = nc.Dataset(self.grids_filename, 'w')
+        f = nc.Dataset(grids_filename, 'w')
 
         # Ice 
         f.createDimension('nyi', self.ice.num_lat_points)
@@ -308,11 +213,97 @@ class OASISGrid:
 
         f.close()
 
+    def write_areas(self, areas_filename):
+        """
+        Make netcdf file areas.nc
+        """
 
-    def write(self):
-        
-        self.make_areas()
-        self.make_masks()
-        self.make_grids()
+        ice = self.ice
+        atm = self.atm
+
+        f = nc.Dataset(self.areas_filename, 'w')
+
+        f.createDimension('nyi', ice.num_lat_points)
+        f.createDimension('nxi', ice.num_lon_points)
+        f.createDimension('nyat', atm.num_lat_points)
+        f.createDimension('nxat', atm.num_lon_points)
+        f.createDimension('nyau', atm.num_lat_points)
+        f.createDimension('nxau', atm.num_lon_points)
+        f.createDimension('nyav', atm.num_lat_points - 1)
+        f.createDimension('nxav', atm.num_lon_points)
+
+        cice_srf = f.createVariable('cice.srf', 'f8', dimensions=('nyi', 'nxi'))
+        cice_srf.units = 'm^2'
+        cice_srf.title = 'cice grid T-cell area.'
+        um1t_srf = f.createVariable('um1t.srf', 'f8',
+                                    dimensions=('nyat', 'nxat'))
+        um1t_srf.units = 'm^2'
+        um1t_srf.title = 'um1t grid area.'
+        um1u_srf = f.createVariable('um1u.srf', 'f8',
+                                    dimensions=('nyau', 'nxau'))
+        um1u_srf.units = 'm^2'
+        um1u_srf.title = 'um1u grid area.'
+        um1v_srf = f.createVariable('um1v.srf', 'f8',
+                                    dimensions=('nyav', 'nxav'))
+        um1v_srf.units = 'm^2'
+        um1v_srf.title = 'um1v grid area.'
+
+        cice_srf[:] = self.ice.area_t[:]
+        um1t_srf[:] = atm.area_t[:]
+        um1u_srf[:] = atm.area_u[:]
+        um1v_srf[:] = atm.area_v[:]
+
+        f.close()
+
+
+    def write_masks(self, masks_filename):
+
+        f = nc.Dataset(masks_filename, 'w')
+
+        f.createDimension('ny0', self.ice.num_lat_points)
+        f.createDimension('nx0', self.ice.num_lon_points)
+        f.createDimension('ny1', self.atm.num_lat_points)
+        f.createDimension('nx1', self.atm.num_lon_points)
+        f.createDimension('ny2', self.atm.num_lat_points - 1)
+        f.createDimension('nx2', self.atm.num_lon_points)
+
+        # Make the ice mask.
+        mask = f.createVariable('cice.msk', 'int32', dimensions=('ny0', 'nx0'))
+        mask.units = '0/1:o/l'
+        mask.title = 'Ice grid T-cell land-sea mask.'
+        # Flip the mask. OASIS uses 1 = masked, 0 = unmasked.
+        mask[:] = (1 - self.ice.mask[:]) 
+
+        # Atm t mask.
+        mask_t = f.createVariable('um1t.msk', 'int32', dimensions=('ny1', 'nx1'))
+        mask_t.units = '0/1:o/l'
+        mask_t.title = 'Atm grid T-cell land-sea mask.'
+        # Build the mask using the atm land fraction. 
+        mask_t[:] = np.copy(self.atm.landfrac)
+        mask_t[np.where(self.atm.landfrac[:] != 1)] = 0
+
+        # Atm u mask.
+        mask_u = f.createVariable('um1u.msk', 'int32', dimensions=('ny1', 'nx1'))
+        mask_u.units = '0/1:o/l'
+        mask_u.title = 'Atm grid U-cell land-sea mask.'
+        mask_u[:] = mask_t[:]
+        # Hack? make u mask by adding land points onto Western land bounary.
+        for i in range(mask_u.shape[0]):
+            for j in range(mask_u.shape[1] - 1):
+                if mask_u[i, j+1] == 1:
+                    mask_u[i, j] = 1
+
+        # Atm v mask.
+        mask_v = f.createVariable('um1v.msk', 'int32', dimensions=('ny2', 'nx2'))
+        mask_v.units = '0/1:o/l'
+        mask_v.title = 'Atm grid V-cell land-sea mask.'
+        mask_v[:] = mask_t[:-1,:]
+        # Hack? make v mask by adding land points onto Southern land bounary.
+        for i in range(mask_v.shape[0] - 1):
+            for j in range(mask_v.shape[1]):
+                if mask_v[i+1, j] == 1:
+                    mask_v[i, j] = 1
+
+        f.close()
 
 

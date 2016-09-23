@@ -4,10 +4,10 @@ from __future__ import print_function
 
 import numpy as np
 import netCDF4 as nc
-from grid import Grid
+from base_grid import BaseGrid
 from util import normalise_lons
 
-class TripolarGrid(Grid):
+class TripolarGrid(BaseGrid):
     """
     This is a global tripolar grid with given depth. To build it an existing
     tripolar grid is used.

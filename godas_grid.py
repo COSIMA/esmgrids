@@ -4,9 +4,9 @@ from __future__ import print_function
 
 import numpy as np
 import netCDF4 as nc
-from grid import Grid
+from base_grid import BaseGrid
 
-class GodasGrid(Grid):
+class GodasGrid(BaseGrid):
 
     def __init__(self, grid_def, description=''):
 
@@ -20,3 +20,5 @@ class GodasGrid(Grid):
             mask = f.variables['pottmp'][0, :].mask[:]
 
         super(GodasGrid, self).__init__(x_t, y_t, z, mask, description)
+
+Grid = GodasGrid

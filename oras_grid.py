@@ -6,12 +6,12 @@ import numpy as np
 import netCDF4 as nc
 import exceptions
 
-from grid import Grid
+from base_grid import BaseGrid
 
 def find_nearest_index(array, value):
     return (np.abs(array - value)).argmin()
 
-class OrasGrid(Grid):
+class OrasGrid(BaseGrid):
 
     def __init__(self, grid_def, description=''):
 

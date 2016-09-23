@@ -4,9 +4,9 @@ from __future__ import print_function
 
 import numpy as np
 import netCDF4 as nc
-from grid import Grid
+from base_grid import BaseGrid
 
-class NemoGrid(Grid):
+class NemoGrid(BaseGrid):
 
     def __init__(self, h_grid_def, v_grid_def, mask_file, description):
 

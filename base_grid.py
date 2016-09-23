@@ -6,7 +6,7 @@ import numpy as np
 import netCDF4 as nc
 import exceptions
 
-class Grid(object):
+class BaseGrid(object):
 
     def __init__(self, lons, lats, levels, mask, description=''):
 
@@ -196,4 +196,4 @@ class Grid(object):
 
         if write_test_scrip:
             self.write_test_scrip(filename + '_test')
-            
+

@@ -5,10 +5,9 @@ from __future__ import print_function
 import numpy as np
 import netCDF4 as nc
 
-from grid import Grid
+from base_grid import BaseGrid
 
-
-class MomGrid(Grid):
+class MomGrid(BaseGrid):
 
     def __init__(self, h_grid_def, v_grid_def, mask_file, description):
         """
@@ -96,9 +95,9 @@ class MOMGrid:
             self.calc_t_and_u_areas(f)
 
     def calc_t_and_u_areas(self, f):
-        """
-        Calculate (add up) areas of T and U cells using the ocean areas. 
-        """
+        #
+        #Calculate (add up) areas of T and U cells using the ocean areas. 
+        #
 
         area = np.copy(f.variables['area'])
         self.area_t = np.zeros((area.shape[0]/2, area.shape[1]/2))
