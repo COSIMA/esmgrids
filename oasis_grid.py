@@ -1,102 +1,6 @@
 
 from base_grid import BaseGrid
 
-def normalise_lons(lons):
-    """
-    Make a copy of lons that is between -180 and 180.
-    """
-
-    lons_n = np.copy(lons)
-
-    lons_n[lons_n > 180] = lons_n[lons_n > 180] - 360
-    lons_n[lons_n < -180] = lons_n[lons_n < -180] + 360
-    return lons_n
-
-
-def oasis_to_2d_corners(input_clons, input_clats):
-    """
-    Change from an oasis corners convention (3D) to 2D convention. Also
-    changes longitudes to be from -180 to 180.
-
-    The input_array has shape (4, rows, columns) where the first dimension is
-    the corner number with 0 being lower left and increasing in
-    counter-clockwise dimension:
-
-    3---2
-    |   |
-    0---1
-
-    From this see that the top corners of one grid cell (3, 2) will be the
-    bottom corners (0, 1) of the grid cell above. The conversion will not
-    work if this assumption does not hold.
-
-    3---2 3---2
-    |   | |   |
-    0---1 0---1
-    3---2 3---2
-    |   | |   |
-    0---1 0---1
-
-    The output array has shape (rows + 1, columns). It contains all the 0
-    corners as well as the top row 3 corners. An extra column is not needed
-    because it is periodic, so the the right hand corners and the right-most
-    cell are in fact the left-most corners. 
-    """
-
-    def check_array(array):
-        """
-        Ensure that input array supports assumption that there are no 'gaps'
-        between cells. These are the assumptions explained above. 
-        """
-
-        # 0 and 3 corners have the same longitude along rows.
-        assert(np.sum(array[0, 1:, :] == array[3, 0:-1, :]) ==
-               array[0, 1:, :].size)
-        # 1 and 2 corners have the same longitude along rows.
-        assert(np.sum(array[1, 1:, :] == array[2, 0:-1, :]) ==
-               array[1, 1:, :].size)
-        # 0 and 1 corners have the same latitude along columns.
-        assert(np.sum(array[0, :, 1:] == array[1, :, 0:-1]) ==
-               array[0, :, 1:].size)
-        # 2 and 3 corners have the same latitude along columns.
-        assert(np.sum(array[3, :, 1:] == array[2, :, 0:-1]) ==
-               array[3, :, 1:].size)
-        # Wraps around in the longitude direction.
-        n_array = (array + 360) % 360
-        assert(np.sum(n_array[0, :, 0] == n_array[1, :, -1] ) ==
-               n_array[0, :, 0].size)
-        assert(np.sum(n_array[3, :, 0] == n_array[2, :, -1] ) ==
-               n_array[3, :, 0].size)
-
-
-    input_clons = normalise_lons(input_clons)
-    check_array(input_clons)
-    check_array(input_clats)
-
-    shape = (input_clons.shape[1] + 1, input_clons.shape[2])
-
-    output_clons = np.zeros(shape)
-    output_clons[:] = np.NAN
-    output_clons[:-1,:] = input_clons[0,:,:] 
-    output_clons[-1,:] = input_clons[3,-1,:]
-    assert(np.sum(output_clons) != np.NAN)
-    # All the numbers in input should also be in output. 
-    # Weird that the rounding is necessary...
-    assert(set(list(np.around(input_clons.flatten(), decimals=10))) ==
-           set(list(np.around(output_clons.flatten(), decimals=10))))
-
-    output_clats = np.zeros(shape)
-    output_clats[:] = np.NAN
-    output_clats[:-1,:] = input_clats[0,:,:] 
-    output_clats[-1,:] = input_clats[3,-1,:]
-    assert(np.sum(output_clats) != np.NAN)
-    assert(set(list(np.around(input_clats.flatten(), decimals=10))) ==
-           set(list(np.around(output_clats.flatten(), decimals=10))))
-
-
-    return output_clons, output_clats 
-
-
 class OasisGrid(BaseGrid)
     """
     Python representation of OASIS grid including:
@@ -104,206 +8,153 @@ class OasisGrid(BaseGrid)
         - grid cell area
         - grid cell masking
     """
+    def __init__(self, grid_name, model_grid, cells):
 
-    def __init__(self, grid_name, model_grid):
+        # OASIS wants grid names to be 4 characters long and we to reserve one
+        # character of the 't' or 'u'.
+        assert(len(grid.name) >= 3)
+
         self.name = grid_name
-        # Arakawa A, B or C grids.
+        # Arakawa B or C grids.
         self.grid_type = model_grid.type
+        assert(self.grid_type == 'Arakawa B' or self.grid_type == 'Arakawa C')
 
+        self.model_grid = model_grid
+        self.cells = cells
 
     def write_grids(self, grids_filename):
         """
+        Make netcdf file grids.nc
         """
 
-        f = nc.Dataset(grids_filename, 'w')
+        f = nc.Dataset(grids_filename, 'r+')
 
-        # Ice 
-        f.createDimension('nyi', self.ice.num_lat_points)
-        f.createDimension('nxi', self.ice.num_lon_points)
-        f.createDimension('nci', 4)
-        cice_lat = f.createVariable('cice.lat', 'f8', ('nyi', 'nxi'))
-        cice_lat.units = "degrees_north"
-        cice_lat.title = "cice grid T-cell latitude."
-        cice_lat[:] = self.ice.y_t[:]
+        for cell in in self.cells:
+            assert(cell == 't' or cell == 'u' or cell == 'v')
 
-        cice_lon = f.createVariable('cice.lon', 'f8', ('nyi', 'nxi'))
-        cice_lon.units = "degrees_east"
-        cice_lon.title = "cice grid T-cell longitude."
-        cice_lon[:] = self.ice.x_t[:]
+            ny_dim = 'ny{}_{}'.format(cell, self.name)
+            nx_dim = 'nx{}_{}'.format(cell, self.name)
+            nc_dim = 'nc{}_{}'.format(cell, self.name)
+            if cell == 't':
+                f.createDimension(ny_dim, self.model_grid.num_lat_points)
+            else:
+                f.createDimension(ny_dim, self.model_grid.num_lat_points - 1)
+            f.createDimension(nx_dim, self.model_grid.num_lon_points)
+            f.createDimension(nc_dim, 4)
 
-        cice_cla = f.createVariable('cice.cla', 'f8', ('nci', 'nyi', 'nxi'))
-        cice_cla.units = "degrees_north"
-        cice_cla.title = "cice grid T-cell corner latitude"
-        cice_cla[:] = self.ice.clat[:]
+            lat_var = '{}{}.lat'.format(self.name[:3], cell)
+            lon_var = '{}{}.lon'.format(self.name[:3], cell)
+            cla_var = '{}{}.cla'.format(self.name[:3], cell)
+            clo_var = '{}{}.clo'.format(self.name[:3], cell)
 
-        cice_clo = f.createVariable('cice.clo', 'f8', ('nci', 'nyi', 'nxi'))
-        cice_clo.units = "degrees_east"
-        cice_clo.title = "cice grid T-cell corner longitude"
-        cice_clo[:] = self.ice.clon[:]
+            if cell == 't':
+                y = self.model_grid.y_t[:]
+                x = self.model_grid.x_t[:]
+                clat = self.model_grid.clat_t[:]
+                clon = self.model_grid.clon_t[:]
+            elif cell == 'u':
+                y = self.model_grid.y_u[:]
+                x = self.model_grid.x_u[:]
+                clat = self.model_grid.clat_u[:]
+                clon = self.model_grid.clon_u[:]
+            else:
+                assert(cell == 'v')
+                assert(self.grid_type == 'Arakawa C')
+                y = self.model_grid.y_v[:]
+                x = self.model_grid.x_v[:]
+                clat = self.model_grid.clat_v[:]
+                clon = self.model_grid.clon_v[:]
 
-        # Atm 
-        f.createDimension('nya1', self.atm.num_lat_points)
-        f.createDimension('nxa1', self.atm.num_lon_points)
-        f.createDimension('nya2', self.atm.num_lat_points - 1)
-        f.createDimension('nxa2', self.atm.num_lon_points)
-        f.createDimension('nca', 4)
+            tmp = f.createVariable(lat_var, 'f8', (ny_dim, nx_dim))
+            tmp.units = "degrees_north"
+            tmp.title = "{} grid {}-cell latitude.".format(self.name, cell.upper())
+            tmp[:] = self.model_grid.y[:]
 
-        # T cells. 
-        um1t_lat = f.createVariable('um1t.lat', 'f8', ('nya1', 'nxa1'))
-        um1t_lat.units = "degrees_north"
-        um1t_lat.title = "um1t grid center latitude"
-        um1t_lat[:] = self.atm.y_t[:]
+            tmp = f.createVariable(lon_var, 'f8', (ny_dim, nx_dim))
+            tmp.units = "degrees_east"
+            tmp.title = "{} grid {}-cell longitude.".format(self.name, cell.upper())
+            tmp[:] = self.model_grid.x[:]
 
-        um1t_lon = f.createVariable('um1t.lon', 'f8', ('nya1', 'nxa1'))
-        um1t_lon.units = "degrees_east"
-        um1t_lon.title = "um1t grid center longitude"
-        um1t_lon[:] = self.atm.x_t[:]
+            tmp = f.createVariable(cla_var, 'f8', (nc_dim, ny_dim, nx_dim))
+            tmp.units = "degrees_north"
+            tmp.title = "{} grid {}-cell corner latitude".format(self.name, cell.upper())
+            tmp[:] = self.model_grid.clat[:]
 
-        um1t_clat = f.createVariable('um1t.cla', 'f8', ('nca', 'nya1', 'nxa1'))
-        um1t_clat.units = "degrees_north"
-        um1t_clat.title = "um1t grid corner latitude"
-        um1t_clat[:] = self.atm.clat_t[:]
-
-        um1t_clon = f.createVariable('um1t.clo', 'f8', ('nca', 'nya1', 'nxa1'))
-        um1t_clon.units = "degrees_east"
-        um1t_clon.title = "um1t grid corner longitude"
-        um1t_clon[:] = self.atm.clon_t[:]
-
-        # U cells
-        um1u_lat = f.createVariable('um1u.lat', 'f8', ('nya1', 'nxa1'))
-        um1u_lat.units = "degrees_north"
-        um1u_lat.title = "um1u grid center latitude"
-        um1u_lat[:] = self.atm.y_u[:]
-
-        um1u_lon = f.createVariable('um1u.lon', 'f8', ('nya1', 'nxa1'))
-        um1u_lon.units = "degrees_east"
-        um1u_lon.title = "um1u grid center longitude"
-        um1u_lon[:] = self.atm.x_u[:]
-
-        um1u_clat = f.createVariable('um1u.cla', 'f8', ('nca', 'nya1', 'nxa1'))
-        um1u_clat.units = "degrees_north"
-        um1u_clat.title = "um1u grid corner latitude"
-        um1u_clat[:] = self.atm.clat_u[:]
-
-        um1u_clon = f.createVariable('um1u.clo', 'f8', ('nca', 'nya1', 'nxa1'))
-        um1u_clon.units = "degrees_east"
-        um1u_clon.title = "um1u grid corner longitude"
-        um1u_clon[:] = self.atm.clon_u[:]
-
-        # V cells.
-        um1v_lat = f.createVariable('um1v.lat', 'f8', ('nya2', 'nxa2'))
-        um1v_lat.units = "degrees_north"
-        um1v_lat.title = "um1v grid center latitude"
-        um1v_lat[:] = self.atm.y_v[:]
-
-        um1v_lon = f.createVariable('um1v.lon', 'f8', ('nya2', 'nxa2'))
-        um1v_lon.units = "degrees_east"
-        um1v_lon.title = "um1v grid center longitude"
-        um1v_lon[:] = self.atm.x_v[:]
-
-        um1v_clat = f.createVariable('um1v.cla', 'f8', ('nca', 'nya2', 'nxa2'))
-        um1v_clat.units = "degrees_north"
-        um1v_clat.title = "um1v grid corner latitude"
-        um1v_clat[:] = self.atm.clat_v[:]
-
-        um1v_clon = f.createVariable('um1v.clo', 'f8', ('nca', 'nya2', 'nxa2'))
-        um1v_clon.units = "degrees_east"
-        um1v_clon.title = "um1v grid corner longitude"
-        um1v_clon[:] = self.atm.clon_v[:]
+            tmp = f.createVariable(clo_var, 'f8', (nc_dim, ny_dim, nx_dim))
+            tmp.units = "degrees_east"
+            tmp.title = "{} grid {}-cell corner longitude".format(self.name, cell.upper())
+            tmp[:] = self.model_grid.clon[:]
 
         f.close()
+
 
     def write_areas(self, areas_filename):
         """
         Make netcdf file areas.nc
         """
 
-        ice = self.ice
-        atm = self.atm
+        f = nc.Dataset(self.areas_filename, 'r+')
 
-        f = nc.Dataset(self.areas_filename, 'w')
+        for cell in self.cells:
+            assert(cell == 't' or cell == 'u' or cell == 'v')
 
-        f.createDimension('nyi', ice.num_lat_points)
-        f.createDimension('nxi', ice.num_lon_points)
-        f.createDimension('nyat', atm.num_lat_points)
-        f.createDimension('nxat', atm.num_lon_points)
-        f.createDimension('nyau', atm.num_lat_points)
-        f.createDimension('nxau', atm.num_lon_points)
-        f.createDimension('nyav', atm.num_lat_points - 1)
-        f.createDimension('nxav', atm.num_lon_points)
+            ny_dim = 'ny{}_{}'.format(cell, self.name)
+            nx_dim = 'nx{}_{}'.format(cell, self.name)
+            if cell == 't':
+                f.createDimension(ny_dim, self.model_grid.num_lat_points)
+            else:
+                f.createDimension(ny_dim, self.model_grid.num_lat_points - 1)
+            f.createDimension(nx_dim, self.model_grid.num_lon_points)
 
-        cice_srf = f.createVariable('cice.srf', 'f8', dimensions=('nyi', 'nxi'))
-        cice_srf.units = 'm^2'
-        cice_srf.title = 'cice grid T-cell area.'
-        um1t_srf = f.createVariable('um1t.srf', 'f8',
-                                    dimensions=('nyat', 'nxat'))
-        um1t_srf.units = 'm^2'
-        um1t_srf.title = 'um1t grid area.'
-        um1u_srf = f.createVariable('um1u.srf', 'f8',
-                                    dimensions=('nyau', 'nxau'))
-        um1u_srf.units = 'm^2'
-        um1u_srf.title = 'um1u grid area.'
-        um1v_srf = f.createVariable('um1v.srf', 'f8',
-                                    dimensions=('nyav', 'nxav'))
-        um1v_srf.units = 'm^2'
-        um1v_srf.title = 'um1v grid area.'
+            srf_var = '{}{}.srf'.format(self.name[:3], cell)
 
-        cice_srf[:] = self.ice.area_t[:]
-        um1t_srf[:] = atm.area_t[:]
-        um1u_srf[:] = atm.area_u[:]
-        um1v_srf[:] = atm.area_v[:]
+            if cell == 't':
+                area = self.model_grid.area_t[:]
+            elif cell == 'u':
+                area = self.model_grid.area_u[:]
+            else:
+                assert(cell == 'v')
+                assert(self.grid_type == 'Arakawa C')
+                area = self.model_grid.area_v[:]
+
+            tmp = f.createVariable(lat_var, 'f8', (ny_dim, nx_dim))
+            tmp.units = "m^2"
+            tmp.title = "{} grid {}-cell area.".format(self.name, cell.upper())
+            tmp[:] = area[:]
 
         f.close()
 
 
     def write_masks(self, masks_filename):
 
-        f = nc.Dataset(masks_filename, 'w')
+        f = nc.Dataset(self.masks_filename, 'r+')
 
-        f.createDimension('ny0', self.ice.num_lat_points)
-        f.createDimension('nx0', self.ice.num_lon_points)
-        f.createDimension('ny1', self.atm.num_lat_points)
-        f.createDimension('nx1', self.atm.num_lon_points)
-        f.createDimension('ny2', self.atm.num_lat_points - 1)
-        f.createDimension('nx2', self.atm.num_lon_points)
+        for cell in self.cells:
+            assert(cell == 't' or cell == 'u' or cell == 'v')
 
-        # Make the ice mask.
-        mask = f.createVariable('cice.msk', 'int32', dimensions=('ny0', 'nx0'))
-        mask.units = '0/1:o/l'
-        mask.title = 'Ice grid T-cell land-sea mask.'
-        # Flip the mask. OASIS uses 1 = masked, 0 = unmasked.
-        mask[:] = (1 - self.ice.mask[:]) 
+            ny_dim = 'ny{}_{}'.format(cell, self.name)
+            nx_dim = 'nx{}_{}'.format(cell, self.name)
+            if cell == 't':
+                f.createDimension(ny_dim, self.model_grid.num_lat_points)
+            else:
+                f.createDimension(ny_dim, self.model_grid.num_lat_points - 1)
+            f.createDimension(nx_dim, self.model_grid.num_lon_points)
 
-        # Atm t mask.
-        mask_t = f.createVariable('um1t.msk', 'int32', dimensions=('ny1', 'nx1'))
-        mask_t.units = '0/1:o/l'
-        mask_t.title = 'Atm grid T-cell land-sea mask.'
-        # Build the mask using the atm land fraction. 
-        mask_t[:] = np.copy(self.atm.landfrac)
-        mask_t[np.where(self.atm.landfrac[:] != 1)] = 0
+            msk_var = '{}{}.msk'.format(self.name[:3], cell)
 
-        # Atm u mask.
-        mask_u = f.createVariable('um1u.msk', 'int32', dimensions=('ny1', 'nx1'))
-        mask_u.units = '0/1:o/l'
-        mask_u.title = 'Atm grid U-cell land-sea mask.'
-        mask_u[:] = mask_t[:]
-        # Hack? make u mask by adding land points onto Western land bounary.
-        for i in range(mask_u.shape[0]):
-            for j in range(mask_u.shape[1] - 1):
-                if mask_u[i, j+1] == 1:
-                    mask_u[i, j] = 1
+            if cell == 't':
+                mask = self.model_grid.mask_t[:]
+            elif cell == 'u':
+                mask = self.model_grid.mask_u[:]
+            else:
+                assert(cell == 'v')
+                assert(self.grid_type == 'Arakawa C')
+                mask = self.model_grid.mask_v[:]
 
-        # Atm v mask.
-        mask_v = f.createVariable('um1v.msk', 'int32', dimensions=('ny2', 'nx2'))
-        mask_v.units = '0/1:o/l'
-        mask_v.title = 'Atm grid V-cell land-sea mask.'
-        mask_v[:] = mask_t[:-1,:]
-        # Hack? make v mask by adding land points onto Southern land bounary.
-        for i in range(mask_v.shape[0] - 1):
-            for j in range(mask_v.shape[1]):
-                if mask_v[i+1, j] == 1:
-                    mask_v[i, j] = 1
+            tmp = f.createVariable(msk_var, 'f8', (ny_dim, nx_dim))
+            tmp.units = '0/1:o/l'
+            tmp.title = "{} grid {}-cell land-sea mask.".format(self.name, cell.upper())
+            # Flip the mask. OASIS uses 1 = masked, 0 = unmasked.
+            tmp[:] = (1 - mask[:])
 
         f.close()
-
-
