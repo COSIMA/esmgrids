@@ -73,22 +73,22 @@ class OasisGrid(BaseGrid):
             tmp = f.createVariable(lat_var, 'f8', (ny_dim, nx_dim))
             tmp.units = "degrees_north"
             tmp.title = "{} grid {}-cell latitude.".format(self.name, cell.upper())
-            tmp[:] = self.model_grid.y[:]
+            tmp[:] = y[:]
 
             tmp = f.createVariable(lon_var, 'f8', (ny_dim, nx_dim))
             tmp.units = "degrees_east"
             tmp.title = "{} grid {}-cell longitude.".format(self.name, cell.upper())
-            tmp[:] = self.model_grid.x[:]
+            tmp[:] = x[:]
 
             tmp = f.createVariable(cla_var, 'f8', (nc_dim, ny_dim, nx_dim))
             tmp.units = "degrees_north"
             tmp.title = "{} grid {}-cell corner latitude".format(self.name, cell.upper())
-            tmp[:] = self.model_grid.clat[:]
+            tmp[:] = clat[:]
 
             tmp = f.createVariable(clo_var, 'f8', (nc_dim, ny_dim, nx_dim))
             tmp.units = "degrees_east"
             tmp.title = "{} grid {}-cell corner longitude".format(self.name, cell.upper())
-            tmp[:] = self.model_grid.clon[:]
+            tmp[:] = clon[:]
 
         f.close()
 

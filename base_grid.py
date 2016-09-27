@@ -8,17 +8,18 @@ import exceptions
 
 class BaseGrid(object):
 
-    def __init__(self, lons, lats, levels, mask, description=''):
+    def __init__(self, x_t, y_t, levels, x_u=None, y_u=None, x_v=None, y_v=None,
+                 mask=None, description=''):
 
-        if len(lons.shape) == 1:
+        if len(x_t.shape) == 1:
             # We expect this to be a regular grid.
-            assert np.allclose(np.diff(lons),
-                     np.array([lons[1] - lons[0]]*(len(lons)-1)))
-            assert np.allclose(np.diff(lats),
-                     np.array([lats[1] - lats[0]]*(len(lats)-1)), atol=1e-4)
+            assert np.allclose(np.diff(x_t),
+                     np.array([x_t[1] - x_t[0]]*(len(x_t)-1)))
+            assert np.allclose(np.diff(y_t),
+                     np.array([y_t[1] - y_t[0]]*(len(y_t)-1)), atol=1e-4)
             # Turn into tiled
-            self.x_t = np.tile(lons, (lats.shape[0], 1))
-            self.y_t = np.tile(lats, (lons.shape[0], 1))
+            self.x_t = np.tile(x_t, (y_t.shape[0], 1))
+            self.y_t = np.tile(y_t, (x_t.shape[0], 1))
             self.y_t = self.y_t.transpose()
 
             self.dy = abs(self.y_t[1, 0] - self.y_t[0, 0])
@@ -28,13 +29,17 @@ class BaseGrid(object):
             self.dy = None
             self.dx = None
 
-            self.x_t = lons
-            self.y_t = lats
+            self.x_t = x_t
+            self.y_t = y_t
 
         self.num_lat_points = self.x_t.shape[0]
         self.num_lon_points = self.x_t.shape[1]
         self.num_levels = len(levels)
 
+        self.x_u = x_u
+        self.y_u = x_u
+        self.x_v = x_v
+        self.y_v = x_v
         self.z = levels
         self.description = description
 
@@ -46,10 +51,11 @@ class BaseGrid(object):
         else:
             self.mask = mask
 
-        self.clon_t = None
-        self.clat_t = None
+        self.make_corners()
 
     def make_corners(self):
+
+        print('Make corners on base class called')
 
         x = self.x_t
         y = self.y_t
@@ -86,9 +92,10 @@ class BaseGrid(object):
         self.clon_t = clon
         self.clat_t = clat
 
+
     def write_test_scrip(self, filename):
         """
-        Write out SCRIP grid contents in a format which is easier to test.
+        Write out SCRIP grid contents in a format which is easier to read/test.
         """
 
         f = nc.Dataset(filename, 'w')

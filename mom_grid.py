@@ -19,12 +19,18 @@ class MomGrid(BaseGrid):
 
         with nc.Dataset(h_grid_def) as f:
 
-            # Select points from double density horizontal grid. Only
-            # need t-points.
+            # Select points from double density horizontal grid.
+            # t-cells.
             x_t = f.variables['x'][1::2,1::2]
             y_t = f.variables['y'][1::2,1::2]
-            self.x_vt = f.variables['x'][:]
-            self.y_vt = f.variables['y'][:]
+
+            # u-cells.
+            x_u = f.variables['x'][:-1:2,:-1:2]
+            y_u = f.variables['y'][:-1:2,:-1:2]
+
+            # All points
+            self.x_dd = f.variables['x'][:]
+            self.y_dd = f.variables['y'][:]
 
         with nc.Dataset(v_grid_def) as f:
             # Only take cell centres.
@@ -34,20 +40,18 @@ class MomGrid(BaseGrid):
             mask = np.zeros_like(f.variables['mask'], dtype=bool)
             mask[f.variables['mask'][:] == 0.0] = True
 
-        super(MomGrid, self).__init__(x_t, y_t, z, mask, description)
-
-        self.num_lat_points = y_t.shape[0]
-        self.num_lon_points = y_t.shape[1]
-
-        self.make_corners()
+        super(MomGrid, self).__init__(x_t, y_t, z, x_u=x_u, y_u=y_u, mask=mask,
+                                        description=description)
 
     def make_corners(self):
 
-        # Uses double density grid to figure out corners.
-        x = self.x_vt
-        y = self.y_vt
+        print('Make corners on derived class called')
 
-        # Corners of t points. Index 0 is bottom left and then
+        # Uses double density grid to figure out corners.
+        x = self.x_dd
+        y = self.y_dd
+
+        # Corners of t cells. Index 0 is bottom left and then
         # anti-clockwise.
         clon = np.empty((self.x_t.shape[0], self.x_t.shape[1], 4))
         clon[:] = np.NAN
@@ -67,3 +71,28 @@ class MomGrid(BaseGrid):
 
         self.clon_t = clon
         self.clat_t = clat
+
+        # Corners of u cells. Index 0 is bottom left and then
+        # anti-clockwise.
+        clon = np.empty((self.x_u.shape[0], self.x_u.shape[1], 4))
+        clon[:] = np.NAN
+        # The Southernmost row of u cells is half-size.
+        # FIXME
+        assert(False)
+        clon[:,:,0] = x[0:-1:2,0:-1:2]
+        clon[:,:,1] = x[0:-1:2,2::2]
+        clon[:,:,2] = x[2::2,2::2]
+        clon[:,:,3] = x[2::2,0:-1:2]
+        assert(not np.isnan(np.sum(clon)))
+
+        clat = np.empty((self.x_t.shape[0], self.x_t.shape[1], 4))
+        clat[:] = np.NAN
+        clat[:,:,0] = y[0:-1:2,0:-1:2]
+        clat[:,:,1] = y[0:-1:2,2::2]
+        clat[:,:,2] = y[2::2,2::2]
+        clat[:,:,3] = y[2::2,0:-1:2]
+        assert(not np.isnan(np.sum(clat)))
+
+        self.clon_u = clon
+        self.clat_u = clat
+
