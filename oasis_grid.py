@@ -1,7 +1,9 @@
 
+import os
+import netCDF4 as nc
 from base_grid import BaseGrid
 
-class OasisGrid(BaseGrid)
+class OasisGrid(BaseGrid):
     """
     Python representation of OASIS grid including:
         - grid cell centre and corners
@@ -12,7 +14,7 @@ class OasisGrid(BaseGrid)
 
         # OASIS wants grid names to be 4 characters long and we to reserve one
         # character of the 't' or 'u'.
-        assert(len(grid.name) >= 3)
+        assert(len(grid_name) >= 3)
 
         self.name = grid_name
         # Arakawa B or C grids.
@@ -27,9 +29,12 @@ class OasisGrid(BaseGrid)
         Make netcdf file grids.nc
         """
 
-        f = nc.Dataset(grids_filename, 'r+')
+        if not os.path.exists(grids_filename):
+            f = nc.Dataset(grids_filename, 'w')
+        else:
+            f = nc.Dataset(grids_filename, 'a')
 
-        for cell in in self.cells:
+        for cell in self.cells:
             assert(cell == 't' or cell == 'u' or cell == 'v')
 
             ny_dim = 'ny{}_{}'.format(cell, self.name)
@@ -93,7 +98,10 @@ class OasisGrid(BaseGrid)
         Make netcdf file areas.nc
         """
 
-        f = nc.Dataset(self.areas_filename, 'r+')
+        if not os.path.exists(grids_filename):
+            f = nc.Dataset(grids_filename, 'w')
+        else:
+            f = nc.Dataset(grids_filename, 'a')
 
         for cell in self.cells:
             assert(cell == 't' or cell == 'u' or cell == 'v')
@@ -127,7 +135,10 @@ class OasisGrid(BaseGrid)
 
     def write_masks(self, masks_filename):
 
-        f = nc.Dataset(self.masks_filename, 'r+')
+        if not os.path.exists(grids_filename):
+            f = nc.Dataset(grids_filename, 'w')
+        else:
+            f = nc.Dataset(grids_filename, 'a')
 
         for cell in self.cells:
             assert(cell == 't' or cell == 'u' or cell == 'v')
