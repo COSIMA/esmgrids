@@ -40,10 +40,7 @@ class OasisGrid(BaseGrid):
             ny_dim = 'ny{}_{}'.format(cell, self.name)
             nx_dim = 'nx{}_{}'.format(cell, self.name)
             nc_dim = 'nc{}_{}'.format(cell, self.name)
-            if cell == 't':
-                f.createDimension(ny_dim, self.model_grid.num_lat_points)
-            else:
-                f.createDimension(ny_dim, self.model_grid.num_lat_points - 1)
+            f.createDimension(ny_dim, self.model_grid.num_lat_points)
             f.createDimension(nx_dim, self.model_grid.num_lon_points)
             f.createDimension(nc_dim, 4)
 
@@ -98,20 +95,17 @@ class OasisGrid(BaseGrid):
         Make netcdf file areas.nc
         """
 
-        if not os.path.exists(grids_filename):
-            f = nc.Dataset(grids_filename, 'w')
+        if not os.path.exists(areas_filename):
+            f = nc.Dataset(areas_filename, 'w')
         else:
-            f = nc.Dataset(grids_filename, 'a')
+            f = nc.Dataset(areas_filename, 'a')
 
         for cell in self.cells:
             assert(cell == 't' or cell == 'u' or cell == 'v')
 
             ny_dim = 'ny{}_{}'.format(cell, self.name)
             nx_dim = 'nx{}_{}'.format(cell, self.name)
-            if cell == 't':
-                f.createDimension(ny_dim, self.model_grid.num_lat_points)
-            else:
-                f.createDimension(ny_dim, self.model_grid.num_lat_points - 1)
+            f.createDimension(ny_dim, self.model_grid.num_lat_points)
             f.createDimension(nx_dim, self.model_grid.num_lon_points)
 
             srf_var = '{}{}.srf'.format(self.name[:3], cell)
@@ -125,7 +119,7 @@ class OasisGrid(BaseGrid):
                 assert(self.grid_type == 'Arakawa C')
                 area = self.model_grid.area_v[:]
 
-            tmp = f.createVariable(lat_var, 'f8', (ny_dim, nx_dim))
+            tmp = f.createVariable(srf_var, 'f8', (ny_dim, nx_dim))
             tmp.units = "m^2"
             tmp.title = "{} grid {}-cell area.".format(self.name, cell.upper())
             tmp[:] = area[:]
@@ -135,20 +129,17 @@ class OasisGrid(BaseGrid):
 
     def write_masks(self, masks_filename):
 
-        if not os.path.exists(grids_filename):
-            f = nc.Dataset(grids_filename, 'w')
+        if not os.path.exists(masks_filename):
+            f = nc.Dataset(masks_filename, 'w')
         else:
-            f = nc.Dataset(grids_filename, 'a')
+            f = nc.Dataset(masks_filename, 'a')
 
         for cell in self.cells:
             assert(cell == 't' or cell == 'u' or cell == 'v')
 
             ny_dim = 'ny{}_{}'.format(cell, self.name)
             nx_dim = 'nx{}_{}'.format(cell, self.name)
-            if cell == 't':
-                f.createDimension(ny_dim, self.model_grid.num_lat_points)
-            else:
-                f.createDimension(ny_dim, self.model_grid.num_lat_points - 1)
+            f.createDimension(ny_dim, self.model_grid.num_lat_points)
             f.createDimension(nx_dim, self.model_grid.num_lon_points)
 
             msk_var = '{}{}.msk'.format(self.name[:3], cell)

@@ -55,8 +55,6 @@ class BaseGrid(object):
 
     def make_corners(self):
 
-        print('Make corners on base class called')
-
         x = self.x_t
         y = self.y_t
 
