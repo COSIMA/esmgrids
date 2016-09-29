@@ -5,6 +5,9 @@ from __future__ import print_function
 import numpy as np
 import netCDF4 as nc
 import exceptions
+from mpl_toolkits.basemap import Basemap
+
+EARTH_AREA = 510072000e6
 
 class BaseGrid(object):
 
@@ -37,9 +40,9 @@ class BaseGrid(object):
         self.num_levels = len(levels)
 
         self.x_u = x_u
-        self.y_u = x_u
+        self.y_u = y_u
         self.x_v = x_v
-        self.y_v = x_v
+        self.y_v = y_v
         self.z = levels
         self.description = description
 
@@ -52,6 +55,14 @@ class BaseGrid(object):
             self.mask = mask
 
         self.make_corners()
+        self.calc_areas()
+
+
+    def calc_areas(self):
+        """
+        """
+        self.area_t = self.calc_area_of_polygons(self.clon_t, self.clat_t)
+        assert(abs(1 - np.sum(self.area_t) / EARTH_AREA) < 2e-4)
 
     def make_corners(self):
 
@@ -201,4 +212,49 @@ class BaseGrid(object):
 
         if write_test_scrip:
             self.write_test_scrip(filename + '_test')
+
+
+    def calc_area_of_polygons(self, clons, clats):
+        """
+        Calculate the area of lat-lon polygons.
+
+        We project sphere onto a flat surface using an equal area projection
+        and then calculate the area of flat polygon.
+        """
+
+        def area_polygon(p):
+            """
+            Calculate the area of a polygon.
+
+            Input is a polygon represented as a list of (x,y) vertex
+            coordinates, implicitly wrapping around from the last vertex to the
+            first.
+
+            See http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
+            """
+
+            def segments(v):
+                return zip(v, v[1:] + [v[0]])
+
+            return 0.5 * abs(sum(x0*y1 - x1*y0
+                                 for ((x0, y0), (x1, y1)) in segments(p)))
+
+
+        areas = np.zeros_like(clons[0])
+        areas[:] = np.NAN
+
+        m = Basemap(projection='laea', resolution='h',
+                    llcrnrlon=0, llcrnrlat=-90.0,
+                    urcrnrlon=360, urcrnrlat=90.0, lat_0=-90, lon_0=0)
+
+        x, y = m(clons, clats)
+
+        for i in range(x[0, :].shape[0]):
+            for j in range(x[0, :].shape[1]):
+                areas[i, j] = area_polygon(zip(x[:, i, j], y[:, i, j]))
+
+        assert(np.sum(areas) is not np.NAN)
+        assert(np.min(areas) > 0)
+
+        return areas
 

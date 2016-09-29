@@ -19,7 +19,8 @@ class OasisGrid(BaseGrid):
         self.name = grid_name
         # Arakawa B or C grids.
         self.grid_type = model_grid.type
-        assert(self.grid_type == 'Arakawa B' or self.grid_type == 'Arakawa C')
+        assert self.grid_type == 'Arakawa B' or self.grid_type == 'Arakawa C' or \
+               self.grid_type == 'Spectral'
 
         self.model_grid = model_grid
         self.cells = cells
@@ -55,13 +56,14 @@ class OasisGrid(BaseGrid):
                 clat = self.model_grid.clat_t[:]
                 clon = self.model_grid.clon_t[:]
             elif cell == 'u':
+                assert self.grid_type != 'Spectral'
                 y = self.model_grid.y_u[:]
                 x = self.model_grid.x_u[:]
                 clat = self.model_grid.clat_u[:]
                 clon = self.model_grid.clon_u[:]
             else:
-                assert(cell == 'v')
-                assert(self.grid_type == 'Arakawa C')
+                assert cell == 'v'
+                assert self.grid_type == 'Arakawa C'
                 y = self.model_grid.y_v[:]
                 x = self.model_grid.x_v[:]
                 clat = self.model_grid.clat_v[:]

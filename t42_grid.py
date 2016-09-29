@@ -2,21 +2,28 @@
 
 from __future__ import print_function
 
+import sys
 import numpy as np
+import netCDF4 as nc
 from base_grid import BaseGrid
 
-class RegularGrid(BaseGrid):
+class T42Grid(BaseGrid):
 
-    def __init__(self, num_lons, num_lats, levels, mask=None, description=''):
-
-        dx = 360.0 / num_lats
-        dy = 180.0 / num_lons
-        dx_half = dx / 2
-        dy_half = dy / 2
+    def __init__(self, num_lons, num_lats, num_levels, mask_file, description=''):
 
         # Set lats and lons.
         lons = np.linspace(0, 360, num_lons, endpoint=False)
-        # lat points exclude the poles.
-        lats = np.linspace(-90 + dy_half, 90 - dy_half, num_lats)
+        lats = np.linspace(-90, 90, num_lats)
+        levels = range(num_levels)
 
-        super(RegularGrid, self).__init__(lons, lats, levels, mask, description)
+        self.type = 'Spectral'
+
+        with nc.Dataset(mask_file) as f:
+            try:
+                mask = np.round(f.variables['WGOCN'][:, :-1])
+            except KeyError, e:
+                print("Error: can't find ocean fraction var WGOCN in {}.".format(mask_file),
+                       file=sys.stderr)
+                raise e
+
+        super(T42Grid, self).__init__(lons, lats, levels, mask, description)

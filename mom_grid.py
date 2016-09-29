@@ -48,6 +48,12 @@ class MomGrid(BaseGrid):
         super(MomGrid, self).__init__(x_t, y_t, z, x_u=x_u, y_u=y_u, mask=mask,
                                         description=description)
 
+    def calc_areas(self):
+        """
+        Areas are read from file above.
+        """
+        pass
+
     def make_corners(self):
 
         # Uses double density grid to figure out corners.
