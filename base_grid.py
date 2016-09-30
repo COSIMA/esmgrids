@@ -62,7 +62,7 @@ class BaseGrid(object):
         """
         """
         self.area_t = self.calc_area_of_polygons(self.clon_t, self.clat_t)
-        assert(abs(1 - np.sum(self.area_t) / EARTH_AREA) < 2e-4)
+        assert(abs(1 - np.sum(self.area_t) / EARTH_AREA) < 5e-4)
 
     def make_corners(self):
 
@@ -240,7 +240,7 @@ class BaseGrid(object):
                                  for ((x0, y0), (x1, y1)) in segments(p)))
 
 
-        areas = np.zeros_like(clons[0])
+        areas = np.zeros(clons.shape[0:2])
         areas[:] = np.NAN
 
         m = Basemap(projection='laea', resolution='h',
@@ -249,9 +249,9 @@ class BaseGrid(object):
 
         x, y = m(clons, clats)
 
-        for i in range(x[0, :].shape[0]):
-            for j in range(x[0, :].shape[1]):
-                areas[i, j] = area_polygon(zip(x[:, i, j], y[:, i, j]))
+        for j in range(x.shape[0]):
+            for i in range(x.shape[1]):
+                areas[j, i] = area_polygon(zip(x[j, i, :], y[j, i, :]))
 
         assert(np.sum(areas) is not np.NAN)
         assert(np.min(areas) > 0)

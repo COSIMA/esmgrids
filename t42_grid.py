@@ -5,15 +5,12 @@ from __future__ import print_function
 import sys
 import numpy as np
 import netCDF4 as nc
-from base_grid import BaseGrid
+from regular_grid import RegularGrid
 
-class T42Grid(BaseGrid):
+class T42Grid(RegularGrid):
 
     def __init__(self, num_lons, num_lats, num_levels, mask_file, description=''):
 
-        # Set lats and lons.
-        lons = np.linspace(0, 360, num_lons, endpoint=False)
-        lats = np.linspace(-90, 90, num_lats)
         levels = range(num_levels)
 
         self.type = 'Spectral'
@@ -26,4 +23,5 @@ class T42Grid(BaseGrid):
                        file=sys.stderr)
                 raise e
 
-        super(T42Grid, self).__init__(lons, lats, levels, mask, description)
+        super(T42Grid, self).__init__(num_lons, num_lats, levels, mask=mask,
+                                        description=description)
