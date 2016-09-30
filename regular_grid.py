@@ -23,4 +23,5 @@ class RegularGrid(BaseGrid):
         # lat points exclude the poles.
         lats = np.linspace(SOUTHERN_EXTENT + dy_half, NORTHERN_EXTENT - dy_half, num_lats)
 
-        super(RegularGrid, self).__init__(lons, lats, levels, mask, description)
+        super(RegularGrid, self).__init__(lons, lats, levels, mask=mask,
+                                          description=description)

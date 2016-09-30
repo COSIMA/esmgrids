@@ -48,11 +48,11 @@ class BaseGrid(object):
 
         if mask is None:
             # Default is all unmasked, up to user to mask.
-            self.mask = np.zeros((self.num_levels,
+            self.mask_t = np.zeros((self.num_levels,
                                  self.num_lat_points, self.num_lon_points),
                                  dtype='int')
         else:
-            self.mask = mask
+            self.mask_t = mask
 
         self.make_corners()
         self.calc_areas()

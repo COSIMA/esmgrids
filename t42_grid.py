@@ -17,7 +17,7 @@ class T42Grid(RegularGrid):
 
         with nc.Dataset(mask_file) as f:
             try:
-                mask = np.round(f.variables['WGOCN'][:, :-1])
+                mask = np.round(f.variables['WGOCN'][0, 0, :, :-1])
             except KeyError, e:
                 print("Error: can't find ocean fraction var WGOCN in {}.".format(mask_file),
                        file=sys.stderr)
