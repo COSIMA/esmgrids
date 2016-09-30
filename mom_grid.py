@@ -9,7 +9,7 @@ from base_grid import BaseGrid
 
 class MomGrid(BaseGrid):
 
-    def __init__(self, h_grid_def, v_grid_def, mask_file, description='MOM tripolar'):
+    def __init__(self, h_grid_def, v_grid_def=None, mask_file=None, description='MOM tripolar'):
         """
         See src/mom5/ocean_core/ocean_grids.F90 and
         MOM4_guide.pdf for a description of the mosaic MOM5 grid.
@@ -35,18 +35,31 @@ class MomGrid(BaseGrid):
             self.area_t = f.variables['area'][1::2, 1::2]
             self.area_u = f.variables['area'][:-1:2, :-1:2]
 
-        with nc.Dataset(v_grid_def) as f:
-            # Only take cell centres.
-            z = f.variables['zeta'][1::2]
+        z = [0]
+        if v_grid_def is not None:
+            with nc.Dataset(v_grid_def) as f:
+                # Only take cell centres.
+                z = f.variables['zeta'][1::2]
 
-        with nc.Dataset(mask_file) as f:
-            mask = np.zeros_like(f.variables['mask'], dtype=bool)
-            mask[f.variables['mask'][:] == 0.0] = True
-            self.mask_t = mask
-            self.mask_u = mask
+        self.mask_file = mask_file
 
-        super(MomGrid, self).__init__(x_t, y_t, z, x_u=x_u, y_u=y_u, mask=mask,
+        super(MomGrid, self).__init__(x_t, y_t, z, x_u=x_u, y_u=y_u,
                                         description=description)
+
+    def set_mask(self):
+        """
+        Mask is read from file if it exists, otherwise default to super class action.
+        """
+
+        if self.mask_file is None:
+            super(MOMGrid, self).set_mask()
+        else:
+            with nc.Dataset(self.mask_file) as f:
+                mask = np.zeros_like(f.variables['mask'], dtype=bool)
+                mask[f.variables['mask'][:] == 0.0] = True
+                self.mask_t = mask
+                self.mask_u = mask
+
 
     def calc_areas(self):
         """

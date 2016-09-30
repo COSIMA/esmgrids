@@ -11,7 +11,7 @@ EARTH_AREA = 510072000e6
 
 class BaseGrid(object):
 
-    def __init__(self, x_t, y_t, levels, x_u=None, y_u=None, x_v=None, y_v=None,
+    def __init__(self, x_t, y_t, levels=[0], x_u=None, y_u=None, x_v=None, y_v=None,
                  mask=None, description=''):
 
         if len(x_t.shape) == 1:
@@ -44,19 +44,22 @@ class BaseGrid(object):
         self.x_v = x_v
         self.y_v = y_v
         self.z = levels
+        self.mask = mask
         self.description = description
 
-        if mask is None:
+        self.set_mask()
+        self.make_corners()
+        self.calc_areas()
+
+    def set_mask(self):
+
+        if self.mask is None:
             # Default is all unmasked, up to user to mask.
             self.mask_t = np.zeros((self.num_levels,
                                  self.num_lat_points, self.num_lon_points),
                                  dtype='int')
         else:
-            self.mask_t = mask
-
-        self.make_corners()
-        self.calc_areas()
-
+            self.mask_t = self.mask
 
     def calc_areas(self):
         """
