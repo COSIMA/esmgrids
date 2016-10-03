@@ -56,7 +56,7 @@ class MomGrid(BaseGrid):
         else:
             with nc.Dataset(self.mask_file) as f:
                 mask = np.zeros_like(f.variables['mask'], dtype=bool)
-                mask[f.variables['mask'][:] == 0.0] = True
+                mask[f.variables['mask'][:] >= 0.5] = True
                 self.mask_t = mask
                 self.mask_u = mask
 

@@ -155,7 +155,7 @@ class OasisGrid(BaseGrid):
                 assert(self.grid_type == 'Arakawa C')
                 mask = self.model_grid.mask_v[:]
 
-            tmp = f.createVariable(msk_var, 'f8', (ny_dim, nx_dim))
+            tmp = f.createVariable(msk_var, 'i4', (ny_dim, nx_dim))
             tmp.units = '0/1:o/l'
             tmp.title = "{} grid {}-cell land-sea mask.".format(self.name, cell.upper())
             # Flip the mask. OASIS uses 1 = masked, 0 = unmasked.
