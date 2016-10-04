@@ -61,9 +61,14 @@ class BaseGrid(object):
         else:
             self.mask_t = self.mask
 
+        # FIXME
+        self.mask_u = self.mask_t
+        self.mask_v = self.mask_t
+
     def calc_areas(self):
         """
         """
+
         self.area_t = self.calc_area_of_polygons(self.clon_t, self.clat_t)
         assert(abs(1 - np.sum(self.area_t) / EARTH_AREA) < 5e-4)
 

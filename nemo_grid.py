@@ -8,7 +8,10 @@ from base_grid import BaseGrid
 
 class NemoGrid(BaseGrid):
 
-    def __init__(self, h_grid_def, v_grid_def, mask_file, description):
+    def __init__(self, h_grid_def, v_grid_def=None, mask_file=None,
+                    description='NEMO tripolar'):
+
+        self.type = 'Arakawa C'
 
         with nc.Dataset(h_grid_def) as f:
 
@@ -16,24 +19,54 @@ class NemoGrid(BaseGrid):
             x_t = f.variables['glamt'][:]
             y_t = f.variables['gphit'][:]
 
+            x_u = f.variables['glamu'][:]
+            y_u = f.variables['gphiu'][:]
+
+            x_v = f.variables['glamv'][:]
+            y_v = f.variables['gphiv'][:]
+
             # These variables hold the corners
             self.glamf = f.variables['glamf'][:]
             self.gphif = f.variables['gphif'][:]
 
-        with nc.Dataset(v_grid_def) as f:
-            z = f.variables['depth'][:]
+            # These hold the edges.
+            self.e1t = f.variables['e1t'][:]
+            self.e2t = f.variables['e2t'][:]
+            self.e1u = f.variables['e1u'][:]
+            self.e2u = f.variables['e2u'][:]
+            self.e1v = f.variables['e1v'][:]
+            self.e2v = f.variables['e2v'][:]
 
-        if mask_file is None:
-            mask = np.zeros_like(x_t, dtype=bool)
+        z = [0]
+        if v_grid_def is not None:
+            with nc.Dataset(v_grid_def) as f:
+                z = f.variables['depth'][:]
+
+        self.mask_file = mask_file
+
+        super(NemoGrid, self).__init__(x_t, y_t, levels=z, x_u=x_u, y_u=y_u,
+                x_v=x_v, y_v=y_v, description=description)
+
+    def set_mask(self):
+        """
+        Mask is read from file if it exists, otherwise default to super class action.
+        """
+
+        if self.mask_file is None:
+            super(NemoGrid, self).set_mask()
         else:
             with nc.Dataset(mask_file) as f:
                 mask = np.zeros_like(f.variables['mask'], dtype=bool)
                 mask[f.variables['mask'][:] == 0.0] = True
+                self.mask_t = mask
+                self.mask_u = mask
+                self.mask_v = mask
 
-        super(NemoGrid, self).__init__(x_t, y_t, z, mask, description)
+    def calc_areas(self):
 
-        self.num_lat_points = y_t.shape[0]
-        self.num_lon_points = y_t.shape[1]
+        self.area_t = self.e1t[:] * self.e2t[:]
+        self.area_u = self.e1u[:] * self.e2u[:]
+        self.area_v = self.e1v[:] * self.e2v[:]
 
     def make_corners(self):
 
@@ -77,3 +110,10 @@ class NemoGrid(BaseGrid):
 
         self.clon_t = clon
         self.clat_t = clat
+
+        # FIXME: do these.
+        self.clon_u = clon
+        self.clat_u = clat
+
+        self.clon_v = clon
+        self.clat_v = clat

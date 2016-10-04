@@ -9,7 +9,8 @@ from base_grid import BaseGrid
 
 class MomGrid(BaseGrid):
 
-    def __init__(self, h_grid_def, v_grid_def=None, mask_file=None, description='MOM tripolar'):
+    def __init__(self, h_grid_def, v_grid_def=None, mask_file=None,
+                    description='MOM tripolar'):
         """
         See src/mom5/ocean_core/ocean_grids.F90 and
         MOM4_guide.pdf for a description of the mosaic MOM5 grid.
@@ -43,7 +44,7 @@ class MomGrid(BaseGrid):
 
         self.mask_file = mask_file
 
-        super(MomGrid, self).__init__(x_t, y_t, z, x_u=x_u, y_u=y_u,
+        super(MomGrid, self).__init__(x_t, y_t, levels=z, x_u=x_u, y_u=y_u,
                                         description=description)
 
     def set_mask(self):
