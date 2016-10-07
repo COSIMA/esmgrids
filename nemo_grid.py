@@ -72,14 +72,14 @@ class NemoGrid(BaseGrid):
 
         ##
         # Extend f points south so that south t cells can have bottom
-        # corners.
+        # corners. Also need to extend west to have left corners.
         ##
         x_f = self.x_f
         y_f = self.y_f
 
         y_f_new = np.ndarray((y_f.shape[0] + 1, y_f.shape[1] + 1))
         y_f_new[1:, 1:] = y_f[:]
-        y_f_new[0, 1:] = y_f[0, :] - abs(y_f[1, :] - y_f[0, :])
+        y_f_new[0, 1:] = y_f[0, :]
 
         x_f_new = np.ndarray((x_f.shape[0] + 1, x_f.shape[1] + 1))
         x_f_new[1:, 1:] = x_f[:]
@@ -93,19 +93,41 @@ class NemoGrid(BaseGrid):
         x_f = x_f_new
 
         ##
-        # Extend u points south so that south v cells can have bottom
-        # corners.
+        # Extend v points south so that south u cells can have bottom
+        # corners. Also need to extend east to have right corners.
+        ##
+        x_v = self.x_v
+        y_v = self.y_v
+
+        y_v_new = np.ndarray((y_v.shape[0] + 1, y_v.shape[1] + 1))
+        y_v_new[1:, :-1] = y_v[:]
+        y_v_new[0, :-1] = y_v[0, :]
+
+        x_v_new = np.ndarray((x_v.shape[0] + 1, x_v.shape[1] + 1))
+        x_v_new[1:, :-1] = x_v[:]
+        x_v_new[0, :-1] = x_v[0, :]
+
+        # Repeat last longitude so that east cells have right corners.
+        y_v_new[:, -1] = y_v_new[:, 0]
+        x_v_new[:, -1] = x_v_new[:, 0]
+
+        y_v = y_v_new
+        x_v = x_v_new
+
+        ##
+        # Extend u points north so that north v cells can have top
+        # corners. Also need to extend west to have left corners.
         ##
         x_u = self.x_u
         y_u = self.y_u
 
         y_u_new = np.ndarray((y_u.shape[0] + 1, y_u.shape[1] + 1))
-        y_u_new[1:, 1:] = y_u[:]
-        y_u_new[0, 1:] = y_u[0, :] - abs(y_u[1, :] - y_u[0, :])
+        y_u_new[:-1, 1:] = y_u[:, :]
+        y_u_new[-1, 1:] = y_u[-1, :]
 
         x_u_new = np.ndarray((x_u.shape[0] + 1, x_u.shape[1] + 1))
-        x_u_new[1:, 1:] = x_u[:]
-        x_u_new[0, 1:] = x_u[0, :]
+        y_u_new[:-1, 1:] = y_u[:, :]
+        y_u_new[-1, 1:] = y_u[-1, :]
 
         # Repeat first longitude so that west t cells have left corners.
         y_u_new[:, 0] = y_u_new[:, -1]
@@ -114,31 +136,8 @@ class NemoGrid(BaseGrid):
         y_u = y_u_new
         x_u = x_u_new
 
-        ##
-        # Extend v points south so that south v cells can have bottom
-        # corners.
-        # FIXME: this is wrong, we need to extend the v's north.
-        ##
-        x_v = self.x_v
-        y_v = self.y_v
-
-        y_v_new = np.ndarray((y_v.shape[0] + 1, y_v.shape[1] + 1))
-        y_v_new[1:, 1:] = y_v[:]
-        y_v_new[0, 1:] = y_v[0, :] - abs(y_v[1, :] - y_v[0, :])
-
-        x_v_new = np.ndarray((x_v.shape[0] + 1, x_v.shape[1] + 1))
-        x_v_new[1:, 1:] = x_v[:]
-        x_v_new[0, 1:] = x_v[0, :]
-
-        # Repeat first longitude so that west t cells have left corners.
-        y_v_new[:, 0] = y_v_new[:, -1]
-        x_v_new[:, 0] = x_v_new[:, -1]
-
-        y_v = y_v_new
-        x_v = x_v_new
-
-        # Corners of t points. Index 0 is bottom left and then
-        # anti-clockwise. The corners of t points are f points.
+        # Corners of t cells are f points. Index 0 is bottom left and then
+        # anti-clockwise.
         clon = np.empty((self.x_t.shape[0], self.x_t.shape[1], 4))
         clon[:] = np.NAN
         clon[:,:,0] = x_f[0:-1,0:-1]
@@ -158,8 +157,7 @@ class NemoGrid(BaseGrid):
         self.clon_t = clon
         self.clat_t = clat
 
-        # Corners of u points. The corners of u points are v points.
-        # FIXME: need to check these.
+        # The corners of u cells are v points.
         clon = np.empty((self.x_u.shape[0], self.x_u.shape[1], 4))
         clon[:] = np.NAN
 
@@ -180,8 +178,7 @@ class NemoGrid(BaseGrid):
         self.clon_u = clon
         self.clat_u = clat
 
-        # Corners of v points. The corners of u points are u points.
-        # FIXME: need to check these.
+        # The corners of u cells are v points.
         clon = np.empty((self.x_v.shape[0], self.x_v.shape[1], 4))
         clon[:] = np.NAN
 
