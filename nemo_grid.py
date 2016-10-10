@@ -26,8 +26,8 @@ class NemoGrid(BaseGrid):
             y_v = f.variables['gphiv'][:]
 
             # These variables hold the corners
-            self.glamf = f.variables['glamf'][:]
-            self.gphif = f.variables['gphif'][:]
+            self.x_f = f.variables['glamf'][:]
+            self.y_f = f.variables['gphif'][:]
 
             # These hold the edges.
             self.e1t = f.variables['e1t'][:]
@@ -68,50 +68,131 @@ class NemoGrid(BaseGrid):
 
     def make_corners(self):
 
-        # These are the top righ-hand corner of t cells.
-        glamf = self.glamf
-        gphif = self.gphif
+        ##
+        # Extend f points south so that south t cells can have bottom
+        # corners. Also need to extend west to have left corners.
+        ##
+        x_f = self.x_f
+        y_f = self.y_f
 
-        # Extend south so that Southern most cells can have bottom corners.
-        gphif_new = np.ndarray((gphif.shape[0] + 1, gphif.shape[1] + 1))
-        gphif_new[1:, 1:] = gphif[:]
-        gphif_new[0, 1:] = gphif[0, :] - abs(gphif[1, :] - gphif[0, :])
+        y_f_new = np.ndarray((y_f.shape[0] + 1, y_f.shape[1] + 1))
+        y_f_new[1:, 1:] = y_f[:]
+        y_f_new[0, 1:] = y_f[0, :]
 
-        glamf_new = np.ndarray((glamf.shape[0] + 1, glamf.shape[1] + 1))
-        glamf_new[1:, 1:] = glamf[:]
-        glamf_new[0, 1:] = glamf[0, :]
+        x_f_new = np.ndarray((x_f.shape[0] + 1, x_f.shape[1] + 1))
+        x_f_new[1:, 1:] = x_f[:]
+        x_f_new[0, 1:] = x_f[0, :]
 
-        # Repeat first longitude so that Western most cells have left corners.
-        gphif_new[:, 0] = gphif_new[:, -1]
-        glamf_new[:, 0] = glamf_new[:, -1]
+        # Repeat first longitude so that west t cells have left corners.
+        y_f_new[:, 0] = y_f_new[:, -1]
+        x_f_new[:, 0] = x_f_new[:, -1]
 
-        gphif = gphif_new
-        glamf = glamf_new
+        y_f = y_f_new
+        x_f = x_f_new
 
-        # Corners of t points. Index 0 is bottom left and then
+        ##
+        # Extend v points south so that south u cells can have bottom
+        # corners. Also need to extend east to have right corners.
+        ##
+        x_v = self.x_v
+        y_v = self.y_v
+
+        y_v_new = np.ndarray((y_v.shape[0] + 1, y_v.shape[1] + 1))
+        y_v_new[1:, :-1] = y_v[:]
+        y_v_new[0, :-1] = y_v[0, :]
+
+        x_v_new = np.ndarray((x_v.shape[0] + 1, x_v.shape[1] + 1))
+        x_v_new[1:, :-1] = x_v[:]
+        x_v_new[0, :-1] = x_v[0, :]
+
+        # Repeat last longitude so that east cells have right corners.
+        y_v_new[:, -1] = y_v_new[:, 0]
+        x_v_new[:, -1] = x_v_new[:, 0]
+
+        y_v = y_v_new
+        x_v = x_v_new
+
+        ##
+        # Extend u points north so that north v cells can have top
+        # corners. Also need to extend west to have left corners.
+        ##
+        x_u = self.x_u
+        y_u = self.y_u
+
+        y_u_new = np.ndarray((y_u.shape[0] + 1, y_u.shape[1] + 1))
+        y_u_new[:-1, 1:] = y_u[:, :]
+        y_u_new[-1, 1:] = y_u[-1, :]
+
+        x_u_new = np.ndarray((x_u.shape[0] + 1, x_u.shape[1] + 1))
+        y_u_new[:-1, 1:] = y_u[:, :]
+        y_u_new[-1, 1:] = y_u[-1, :]
+
+        # Repeat first longitude so that west t cells have left corners.
+        y_u_new[:, 0] = y_u_new[:, -1]
+        x_u_new[:, 0] = x_u_new[:, -1]
+
+        y_u = y_u_new
+        x_u = x_u_new
+
+        # Corners of t cells are f points. Index 0 is bottom left and then
         # anti-clockwise.
         clon = np.empty((self.x_t.shape[0], self.x_t.shape[1], 4))
         clon[:] = np.NAN
-        clon[:,:,0] = glamf[0:-1,0:-1]
-        clon[:,:,1] = glamf[0:-1,1:]
-        clon[:,:,2] = glamf[1:,1:]
-        clon[:,:,3] = glamf[1:,0:-1]
+        clon[:,:,0] = x_f[0:-1,0:-1]
+        clon[:,:,1] = x_f[0:-1,1:]
+        clon[:,:,2] = x_f[1:,1:]
+        clon[:,:,3] = x_f[1:,0:-1]
         assert(not np.isnan(np.sum(clon)))
 
         clat = np.empty((self.x_t.shape[0], self.x_t.shape[1], 4))
         clat[:] = np.NAN
-        clat[:,:,0] = gphif[0:-1,0:-1]
-        clat[:,:,1] = gphif[0:-1,1:]
-        clat[:,:,2] = gphif[1:,1:]
-        clat[:,:,3] = gphif[1:,0:-1]
+        clat[:,:,0] = y_f[0:-1,0:-1]
+        clat[:,:,1] = y_f[0:-1,1:]
+        clat[:,:,2] = y_f[1:,1:]
+        clat[:,:,3] = y_f[1:,0:-1]
         assert(not np.isnan(np.sum(clat)))
 
         self.clon_t = clon
         self.clat_t = clat
 
-        # FIXME: do these.
+        # The corners of u cells are v points.
+        clon = np.empty((self.x_u.shape[0], self.x_u.shape[1], 4))
+        clon[:] = np.NAN
+
+        clon[:,:,0] = x_v[0:-1,0:-1]
+        clon[:,:,1] = x_v[0:-1,1:]
+        clon[:,:,2] = x_v[1:,1:]
+        clon[:,:,3] = x_v[1:,0:-1]
+        assert(not np.isnan(np.sum(clon)))
+
+        clat = np.empty((self.x_u.shape[0], self.x_u.shape[1], 4))
+        clat[:] = np.NAN
+        clat[:,:,0] = y_v[0:-1,0:-1]
+        clat[:,:,1] = y_v[0:-1,1:]
+        clat[:,:,2] = y_v[1:,1:]
+        clat[:,:,3] = y_v[1:,0:-1]
+        assert(not np.isnan(np.sum(clat)))
+
         self.clon_u = clon
         self.clat_u = clat
+
+        # The corners of u cells are v points.
+        clon = np.empty((self.x_v.shape[0], self.x_v.shape[1], 4))
+        clon[:] = np.NAN
+
+        clon[:,:,0] = x_u[0:-1,0:-1]
+        clon[:,:,1] = x_u[0:-1,1:]
+        clon[:,:,2] = x_u[1:,1:]
+        clon[:,:,3] = x_u[1:,0:-1]
+        assert(not np.isnan(np.sum(clon)))
+
+        clat = np.empty((self.x_v.shape[0], self.x_v.shape[1], 4))
+        clat[:] = np.NAN
+        clat[:,:,0] = y_u[0:-1,0:-1]
+        clat[:,:,1] = y_u[0:-1,1:]
+        clat[:,:,2] = y_u[1:,1:]
+        clat[:,:,3] = y_u[1:,0:-1]
+        assert(not np.isnan(np.sum(clat)))
 
         self.clon_v = clon
         self.clat_v = clat
