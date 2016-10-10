@@ -155,6 +155,11 @@ class OasisGrid(BaseGrid):
                 assert(self.grid_type == 'Arakawa C')
                 mask = self.model_grid.mask_v[:]
 
+            if len(mask.shape) == 4:
+                mask = mask[0, 0, :, :]
+            elif len(mask.shape) == 3:
+                mask = mask[0, :, :]
+
             tmp = f.createVariable(msk_var, 'i4', (ny_dim, nx_dim))
             tmp.units = '0/1:o/l'
             tmp.title = "{} grid {}-cell land-sea mask.".format(self.name, cell.upper())

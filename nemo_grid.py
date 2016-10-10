@@ -55,12 +55,10 @@ class NemoGrid(BaseGrid):
         if self.mask_file is None:
             super(NemoGrid, self).set_mask()
         else:
-            with nc.Dataset(mask_file) as f:
-                mask = np.zeros_like(f.variables['mask'], dtype=bool)
-                mask[f.variables['mask'][:] == 0.0] = True
-                self.mask_t = mask
-                self.mask_u = mask
-                self.mask_v = mask
+            with nc.Dataset(self.mask_file) as f:
+                self.mask_t = ~(f.variables['tmask'][:, :, :, :])
+                self.mask_u = ~(f.variables['umask'][:, :, :, :])
+                self.mask_v = ~(f.variables['vmask'][:, :, :, :])
 
     def calc_areas(self):
 
