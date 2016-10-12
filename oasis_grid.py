@@ -41,9 +41,27 @@ class OasisGrid(BaseGrid):
             ny_dim = 'ny{}_{}'.format(cell, self.name)
             nx_dim = 'nx{}_{}'.format(cell, self.name)
             nc_dim = 'nc{}_{}'.format(cell, self.name)
-            f.createDimension(ny_dim, self.model_grid.num_lat_points)
-            f.createDimension(nx_dim, self.model_grid.num_lon_points)
-            f.createDimension(nc_dim, 4)
+            try:
+                f.createDimension(ny_dim, self.model_grid.num_lat_points)
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    pass
+                else:
+                    raise e
+            try:
+                f.createDimension(nx_dim, self.model_grid.num_lon_points)
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    pass
+                else:
+                    raise e
+            try:
+                f.createDimension(nc_dim, 4)
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    pass
+                else:
+                    raise e
 
             lat_var = '{}{}.lat'.format(self.name[:3], cell)
             lon_var = '{}{}.lon'.format(self.name[:3], cell)
@@ -70,22 +88,46 @@ class OasisGrid(BaseGrid):
                 clat = self.model_grid.clat_v[:]
                 clon = self.model_grid.clon_v[:]
 
-            tmp = f.createVariable(lat_var, 'f8', (ny_dim, nx_dim))
+            try:
+                tmp = f.createVariable(lat_var, 'f8', (ny_dim, nx_dim))
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    tmp = f.variables[lat_var]
+                else:
+                    raise e
             tmp.units = "degrees_north"
             tmp.title = "{} grid {}-cell latitude.".format(self.name, cell.upper())
             tmp[:] = y[:]
 
-            tmp = f.createVariable(lon_var, 'f8', (ny_dim, nx_dim))
+            try:
+                tmp = f.createVariable(lon_var, 'f8', (ny_dim, nx_dim))
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    tmp = f.variables[lon_var]
+                else:
+                    raise e
             tmp.units = "degrees_east"
             tmp.title = "{} grid {}-cell longitude.".format(self.name, cell.upper())
             tmp[:] = x[:]
 
-            tmp = f.createVariable(cla_var, 'f8', (nc_dim, ny_dim, nx_dim))
+            try:
+                tmp = f.createVariable(cla_var, 'f8', (nc_dim, ny_dim, nx_dim))
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    tmp = f.variables[cla_var]
+                else:
+                    raise e
             tmp.units = "degrees_north"
             tmp.title = "{} grid {}-cell corner latitude".format(self.name, cell.upper())
             tmp[:] = clat[:]
 
-            tmp = f.createVariable(clo_var, 'f8', (nc_dim, ny_dim, nx_dim))
+            try:
+                tmp = f.createVariable(clo_var, 'f8', (nc_dim, ny_dim, nx_dim))
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    tmp = f.variables[clo_var]
+                else:
+                    raise e
             tmp.units = "degrees_east"
             tmp.title = "{} grid {}-cell corner longitude".format(self.name, cell.upper())
             tmp[:] = clon[:]
@@ -108,8 +150,20 @@ class OasisGrid(BaseGrid):
 
             ny_dim = 'ny{}_{}'.format(cell, self.name)
             nx_dim = 'nx{}_{}'.format(cell, self.name)
-            f.createDimension(ny_dim, self.model_grid.num_lat_points)
-            f.createDimension(nx_dim, self.model_grid.num_lon_points)
+            try:
+                f.createDimension(ny_dim, self.model_grid.num_lat_points)
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    pass
+                else:
+                    raise e
+            try:
+                f.createDimension(nx_dim, self.model_grid.num_lon_points)
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    pass
+                else:
+                    raise e
 
             srf_var = '{}{}.srf'.format(self.name[:3], cell)
 
@@ -124,7 +178,13 @@ class OasisGrid(BaseGrid):
                 assert(self.grid_type == 'Arakawa C')
                 area = self.model_grid.area_v[:]
 
-            tmp = f.createVariable(srf_var, 'f8', (ny_dim, nx_dim))
+            try:
+                tmp = f.createVariable(srf_var, 'f8', (ny_dim, nx_dim))
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    tmp = f.variables[srf_var]
+                else:
+                    raise e
             tmp.units = "m^2"
             tmp.title = "{} grid {}-cell area.".format(self.name, cell.upper())
             tmp[:] = area[:]
@@ -144,8 +204,20 @@ class OasisGrid(BaseGrid):
 
             ny_dim = 'ny{}_{}'.format(cell, self.name)
             nx_dim = 'nx{}_{}'.format(cell, self.name)
-            f.createDimension(ny_dim, self.model_grid.num_lat_points)
-            f.createDimension(nx_dim, self.model_grid.num_lon_points)
+            try:
+                f.createDimension(ny_dim, self.model_grid.num_lat_points)
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    pass
+                else:
+                    raise e
+            try:
+                f.createDimension(nx_dim, self.model_grid.num_lon_points)
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    pass
+                else:
+                    raise e
 
             msk_var = '{}{}.msk'.format(self.name[:3], cell)
 
@@ -165,7 +237,13 @@ class OasisGrid(BaseGrid):
             elif len(mask.shape) == 3:
                 mask = mask[0, :, :]
 
-            tmp = f.createVariable(msk_var, 'i4', (ny_dim, nx_dim))
+            try:
+                tmp = f.createVariable(msk_var, 'i4', (ny_dim, nx_dim))
+            except RuntimeError as e:
+                if str(e) == 'NetCDF: String match to name in use':
+                    tmp = f.variables[msk_var]
+                else:
+                    raise e
             tmp.units = '0/1:o/l'
             tmp.title = "{} grid {}-cell land-sea mask.".format(self.name, cell.upper())
             # Flip the mask. OASIS uses 1 = masked, 0 = unmasked.
