@@ -82,29 +82,29 @@ class BaseGrid(object):
 
         # Set grid corners, we do these one corner at a time. Start at the 
         # bottom left and go anti-clockwise. This is the SCRIP convention.
-        clon = np.empty((self.num_lat_points, self.num_lon_points, 4))
+        clon = np.empty((4, self.num_lat_points, self.num_lon_points))
         clon[:] = np.NAN
-        clon[:,:,0] = x - dx_half
-        clon[:,:,1] = x + dx_half
-        clon[:,:,2] = x + dx_half
-        clon[:,:,3] = x - dx_half
+        clon[0,:,:] = x - dx_half
+        clon[1,:,:] = x + dx_half
+        clon[2,:,:] = x + dx_half
+        clon[3,:,:] = x - dx_half
         assert(not np.isnan(np.sum(clon)))
 
-        clat = np.empty((self.num_lat_points, self.num_lon_points, 4))
+        clat = np.empty((4, self.num_lat_points, self.num_lon_points))
         clat[:] = np.NAN
-        clat[:,:,0] = y - dy_half
-        clat[:,:,1] = y - dy_half
-        clat[:,:,2] = y + dy_half
-        clat[:,:,3] = y + dy_half
+        clat[0,:,:] = y - dy_half
+        clat[1,:,:] = y - dy_half
+        clat[2,:,:] = y + dy_half
+        clat[3,:,:] = y + dy_half
         assert(not np.isnan(np.sum(clat)))
 
         # The bottom latitude band should always be Southern extent.
-        assert(np.all(clat[0, :, 0] == np.min(y) - dy_half))
-        assert(np.all(clat[0, :, 1] == np.min(y) - dy_half))
+        assert(np.all(clat[0, 0, :] == np.min(y) - dy_half))
+        assert(np.all(clat[1, 0, :] == np.min(y) - dy_half))
 
         # The top latitude band should always be Northern extent.
-        assert(np.all(clat[-1, :, 2] == np.max(y) + dy_half))
-        assert(np.all(clat[-1, :, 3] == np.max(y) + dy_half))
+        assert(np.all(clat[2, -1, :] == np.max(y) + dy_half))
+        assert(np.all(clat[3, -1, :] == np.max(y) + dy_half))
 
         self.clon_t = clon
         self.clat_t = clat
@@ -248,7 +248,7 @@ class BaseGrid(object):
                                  for ((x0, y0), (x1, y1)) in segments(p)))
 
 
-        areas = np.zeros(clons.shape[0:2])
+        areas = np.zeros(clons.shape[1:])
         areas[:] = np.NAN
 
         m = Basemap(projection='laea', resolution='h',
@@ -257,9 +257,9 @@ class BaseGrid(object):
 
         x, y = m(clons, clats)
 
-        for j in range(x.shape[0]):
-            for i in range(x.shape[1]):
-                areas[j, i] = area_polygon(zip(x[j, i, :], y[j, i, :]))
+        for j in range(x.shape[1]):
+            for i in range(x.shape[2]):
+                areas[j, i] = area_polygon(zip(x[:, j, i], y[:, j, i]))
 
         assert(np.sum(areas) is not np.NAN)
         assert(np.min(areas) > 0)

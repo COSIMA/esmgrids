@@ -3,20 +3,24 @@
 from __future__ import print_function
 
 import numpy as np
-from base_grid import BaseGrid
+import netCDF4 as nc
+from regular_grid import RegularGrid
 
-class RegularGrid(BaseGrid):
+class FV300Grid(RegularGrid):
 
-    def __init__(self, num_lons, num_lats, levels, mask=None, description=''):
+    def __init__(self, num_lons, num_lats, num_levels, mask_file, description=''):
 
-        dx = 360.0 / num_lats
-        dy = 180.0 / num_lons
-        dx_half = dx / 2
-        dy_half = dy / 2
+        levels = range(num_levels)
 
-        # Set lats and lons.
-        lons = np.linspace(0, 360, num_lons, endpoint=False)
-        # lat points exclude the poles.
-        lats = np.linspace(-90 + dy_half, 90 - dy_half, num_lats)
+        self.type = 'Arakawa A'
 
-        super(RegularGrid, self).__init__(lons, lats, levels, mask, description)
+        with nc.Dataset(mask_file) as f:
+            try:
+                mask = np.round(f.variables['WGOCN'][0, 0, :, :])
+            except KeyError, e:
+                print("Error: can't find ocean fraction var WGOCN in {}.".format(mask_file),
+                       file=sys.stderr)
+                raise e
+
+        super(FV300Grid, self).__init__(num_lons, num_lats, levels, mask=mask,
+                                        description=description)

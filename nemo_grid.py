@@ -56,9 +56,9 @@ class NemoGrid(BaseGrid):
             super(NemoGrid, self).set_mask()
         else:
             with nc.Dataset(self.mask_file) as f:
-                self.mask_t = ~(f.variables['tmask'][:, :, :, :])
-                self.mask_u = ~(f.variables['umask'][:, :, :, :])
-                self.mask_v = ~(f.variables['vmask'][:, :, :, :])
+                self.mask_t = f.variables['tmask'][:, :, :, :]
+                self.mask_u = f.variables['umask'][:, :, :, :]
+                self.mask_v = f.variables['vmask'][:, :, :, :]
 
     def calc_areas(self):
 
@@ -124,8 +124,8 @@ class NemoGrid(BaseGrid):
         y_u_new[-1, 1:] = y_u[-1, :]
 
         x_u_new = np.ndarray((x_u.shape[0] + 1, x_u.shape[1] + 1))
-        y_u_new[:-1, 1:] = y_u[:, :]
-        y_u_new[-1, 1:] = y_u[-1, :]
+        x_u_new[:-1, 1:] = x_u[:, :]
+        x_u_new[-1, 1:] = x_u[-1, :]
 
         # Repeat first longitude so that west t cells have left corners.
         y_u_new[:, 0] = y_u_new[:, -1]
@@ -136,63 +136,64 @@ class NemoGrid(BaseGrid):
 
         # Corners of t cells are f points. Index 0 is bottom left and then
         # anti-clockwise.
-        clon = np.empty((self.x_t.shape[0], self.x_t.shape[1], 4))
+        clon = np.empty((4, self.x_t.shape[0], self.x_t.shape[1]))
         clon[:] = np.NAN
-        clon[:,:,0] = x_f[0:-1,0:-1]
-        clon[:,:,1] = x_f[0:-1,1:]
-        clon[:,:,2] = x_f[1:,1:]
-        clon[:,:,3] = x_f[1:,0:-1]
+        clon[0,:,:] = x_f[0:-1,0:-1]
+        clon[1,:,:] = x_f[0:-1,1:]
+        clon[2,:,:] = x_f[1:,1:]
+        clon[3,:,:] = x_f[1:,0:-1]
         assert(not np.isnan(np.sum(clon)))
 
-        clat = np.empty((self.x_t.shape[0], self.x_t.shape[1], 4))
+        clat = np.empty((4, self.x_t.shape[0], self.x_t.shape[1]))
         clat[:] = np.NAN
-        clat[:,:,0] = y_f[0:-1,0:-1]
-        clat[:,:,1] = y_f[0:-1,1:]
-        clat[:,:,2] = y_f[1:,1:]
-        clat[:,:,3] = y_f[1:,0:-1]
+        clat[0,:,:] = y_f[0:-1,0:-1]
+        clat[1,:,:] = y_f[0:-1,1:]
+        clat[2,:,:] = y_f[1:,1:]
+        clat[3,:,:] = y_f[1:,0:-1]
         assert(not np.isnan(np.sum(clat)))
 
         self.clon_t = clon
         self.clat_t = clat
 
         # The corners of u cells are v points.
-        clon = np.empty((self.x_u.shape[0], self.x_u.shape[1], 4))
+        clon = np.empty((4, self.x_u.shape[0], self.x_u.shape[1]))
         clon[:] = np.NAN
 
-        clon[:,:,0] = x_v[0:-1,0:-1]
-        clon[:,:,1] = x_v[0:-1,1:]
-        clon[:,:,2] = x_v[1:,1:]
-        clon[:,:,3] = x_v[1:,0:-1]
+        clon[0,:,:] = x_v[0:-1,0:-1]
+        clon[1,:,:] = x_v[0:-1,1:]
+        clon[2,:,:] = x_v[1:,1:]
+        clon[3,:,:] = x_v[1:,0:-1]
         assert(not np.isnan(np.sum(clon)))
 
-        clat = np.empty((self.x_u.shape[0], self.x_u.shape[1], 4))
+        clat = np.empty((4, self.x_u.shape[0], self.x_u.shape[1]))
         clat[:] = np.NAN
-        clat[:,:,0] = y_v[0:-1,0:-1]
-        clat[:,:,1] = y_v[0:-1,1:]
-        clat[:,:,2] = y_v[1:,1:]
-        clat[:,:,3] = y_v[1:,0:-1]
+        clat[0,:,:] = y_v[0:-1,0:-1]
+        clat[1,:,:] = y_v[0:-1,1:]
+        clat[2,:,:] = y_v[1:,1:]
+        clat[3,:,:] = y_v[1:,0:-1]
         assert(not np.isnan(np.sum(clat)))
 
         self.clon_u = clon
         self.clat_u = clat
 
-        # The corners of u cells are v points.
-        clon = np.empty((self.x_v.shape[0], self.x_v.shape[1], 4))
+        # The corners of v cells are u points.
+        clon = np.empty((4, self.x_v.shape[0], self.x_v.shape[1]))
         clon[:] = np.NAN
 
-        clon[:,:,0] = x_u[0:-1,0:-1]
-        clon[:,:,1] = x_u[0:-1,1:]
-        clon[:,:,2] = x_u[1:,1:]
-        clon[:,:,3] = x_u[1:,0:-1]
+        clon[0,:,:] = x_u[0:-1,0:-1]
+        clon[1,:,:] = x_u[0:-1,1:]
+        clon[2,:,:] = x_u[1:,1:]
+        clon[3,:,:] = x_u[1:,0:-1]
         assert(not np.isnan(np.sum(clon)))
 
-        clat = np.empty((self.x_v.shape[0], self.x_v.shape[1], 4))
+        clat = np.empty((4, self.x_v.shape[0], self.x_v.shape[1]))
         clat[:] = np.NAN
-        clat[:,:,0] = y_u[0:-1,0:-1]
-        clat[:,:,1] = y_u[0:-1,1:]
-        clat[:,:,2] = y_u[1:,1:]
-        clat[:,:,3] = y_u[1:,0:-1]
+        clat[0,:,:] = y_u[0:-1,0:-1]
+        clat[1,:,:] = y_u[0:-1,1:]
+        clat[2,:,:] = y_u[1:,1:]
+        clat[3,:,:] = y_u[1:,0:-1]
         assert(not np.isnan(np.sum(clat)))
 
         self.clon_v = clon
         self.clat_v = clat
+
