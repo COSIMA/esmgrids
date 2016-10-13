@@ -5,7 +5,12 @@ from __future__ import print_function
 import numpy as np
 import netCDF4 as nc
 import exceptions
-from mpl_toolkits.basemap import Basemap
+import warnings
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import mpl_toolkits.basemap as basemap
+
 
 EARTH_AREA = 510072000e6
 
@@ -251,9 +256,9 @@ class BaseGrid(object):
         areas = np.zeros(clons.shape[1:])
         areas[:] = np.NAN
 
-        m = Basemap(projection='laea', resolution='h',
-                    llcrnrlon=0, llcrnrlat=-90.0,
-                    urcrnrlon=360, urcrnrlat=90.0, lat_0=-90, lon_0=0)
+        m = basemap.Basemap(projection='laea', resolution='h',
+                            llcrnrlon=0, llcrnrlat=-90.0,
+                            urcrnrlon=360, urcrnrlat=90.0, lat_0=-90, lon_0=0)
 
         x, y = m(clons, clats)
 
