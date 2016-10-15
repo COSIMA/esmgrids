@@ -66,7 +66,7 @@ class BaseGrid(object):
         else:
             self.mask_t = self.mask
 
-        # FIXME
+        # FIXME: is a correct generalisation?
         self.mask_u = self.mask_t
         self.mask_v = self.mask_t
 
