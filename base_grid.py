@@ -11,7 +11,6 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import mpl_toolkits.basemap as basemap
 
-
 EARTH_AREA = 510072000e6
 
 class BaseGrid(object):

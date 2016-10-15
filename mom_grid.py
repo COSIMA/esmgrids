@@ -33,8 +33,20 @@ class MomGrid(BaseGrid):
             self.x_dd = f.variables['x'][:]
             self.y_dd = f.variables['y'][:]
 
-            self.area_t = f.variables['area'][1::2, 1::2]
-            self.area_u = f.variables['area'][:-1:2, :-1:2]
+            area = f.variables['area'][:]
+            self.area_t = np.zeros((area.shape[0]/2, area.shape[1]/2))
+            self.area_u = np.zeros((area.shape[0]/2, area.shape[1]/2))
+
+            # Add up areas, going clockwise from bottom left.
+            self.area_t = area[0::2, 0::2] + area[1::2, 0::2] + \
+                          area[1::2, 1::2] + area[0::2, 1::2]
+
+            # These need to wrap around the globe. Copy ocn_area and add an extra
+            # column at the end.
+            area_ext = np.append(area[:], area[:, 0:1], axis=1)
+            self.area_u = area_ext[0::2, 1::2] + area_ext[1::2, 1::2] + \
+                          area_ext[1::2, 2::2] + area_ext[0::2, 2::2]
+
 
         z = [0]
         if v_grid_def is not None:
