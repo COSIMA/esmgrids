@@ -48,7 +48,7 @@ class BaseGrid(object):
         self.x_v = x_v
         self.y_v = y_v
         self.z = levels
-        self.mask = mask
+        self.tmp_mask = mask
         self.description = description
 
         self.set_mask()
@@ -57,13 +57,13 @@ class BaseGrid(object):
 
     def set_mask(self):
 
-        if self.mask is None:
+        if self.tmp_mask is None:
             # Default is all unmasked, up to user to mask.
             self.mask_t = np.zeros((self.num_levels,
                                  self.num_lat_points, self.num_lon_points),
                                  dtype='int')
         else:
-            self.mask_t = self.mask
+            self.mask_t = self.tmp_mask
 
         # FIXME: is a correct generalisation?
         self.mask_u = self.mask_t

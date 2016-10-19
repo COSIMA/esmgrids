@@ -6,6 +6,8 @@ import numpy as np
 import numba
 import tempfile
 import subprocess as sp
+import netCDF4 as nc
+from scipy import ndimage as nd
 
 @numba.jit
 def apply_weights(src, dest_shape, n_s, n_b, row, col, s):
@@ -17,7 +19,7 @@ def apply_weights(src, dest_shape, n_s, n_b, row, col, s):
     dest[:] = 0.0
     src = src.flatten()
 
-    for i in xrange(1, n_s):
+    for i in xrange(n_s):
         dest[row[i]-1] = dest[row[i]-1] + s[i]*src[col[i]-1]
 
     return dest.reshape(dest_shape)
@@ -29,8 +31,7 @@ def regrid(regrid_weights, src_data, dest_grid):
 
     print('Horizontal regridding ...')
     # Destination arrays
-    dest_data = np.ndarray((dest_grid.num_levels, dest_grid.num_lat_points,
-                            dest_grid.num_lon_points))
+    dest_data = np.ndarray((dest_grid.num_lat_points, dest_grid.num_lon_points))
 
     with nc.Dataset(regrid_weights) as wf:
         n_s = wf.dimensions['n_s'].size
@@ -39,23 +40,35 @@ def regrid(regrid_weights, src_data, dest_grid):
         col = wf.variables['col'][:]
         s = wf.variables['S'][:]
 
-    for l in range(src_data.shape[0]):
-        dest_data[l, :, :] = apply_weights(src_data[l, :, :], dest_data.shape[1:],
-                                           n_s, n_b, row, col, s)
+    dest_data[:, :] = apply_weights(src_data[:, :], dest_data.shape,
+                                       n_s, n_b, row, col, s)
     return dest_data
 
 
-def create_regrid_weights(src_grid, dest_grid):
+def create_regrid_weights(src_grid, dest_grid, method,
+                            unmasked_src=True, unmasked_dest=False):
+
+    assert method == 'bilinear' or method == 'neareststod'
 
     _, src_grid_scrip = tempfile.mkstemp(suffix='.nc')
-    src_grid.write_scrip(src_grid_scrip)
+    if unmasked_src:
+        src_grid.write_scrip(src_grid_scrip,
+                            mask=np.zeros_like(src_grid.mask_t, dtype=int))
+    else:
+        src_grid.write_scrip(src_grid_scrip)
+
     _, dest_grid_scrip = tempfile.mkstemp(suffix='.nc')
-    dest_grid.write_scrip(dest_grid_scrip)
+    if unmasked_dest:
+        dest_grid.write_scrip(dest_grid_scrip,
+                              mask=np.zeros_like(dest_grid.mask_t, dtype=int))
+    else:
+        dest_grid.write_scrip(dest_grid_scrip)
+
     _, regrid_weights = tempfile.mkstemp(suffix='.nc')
 
     try:
         sp.check_output(['ESMF_RegridWeightGen', '-s', src_grid_scrip,
-                         '-d', dest_grid_scrip, '-m', 'bilinear',
+                         '-d', dest_grid_scrip, '-m', method,
                          '-w', regrid_weights])
     except sp.CalledProcessError, e:
         print("Error: ESMF_RegridWeightGen failed return code {}".format(e.returncode),
@@ -71,4 +84,20 @@ def create_regrid_weights(src_grid, dest_grid):
     assert(os.path.exists(regrid_weights))
 
     return regrid_weights
+
+
+def fill_mask_with_nearest_neighbour(field, field_mask):
+    """
+    This is the Python way using grid-box nearest neighbour, an alternative is
+    to do nn based on geographic distance using the above.
+    """
+
+    new_data = np.ma.copy(field)
+
+    ind = nd.distance_transform_edt(field_mask,
+                                    return_distances=False,
+                                    return_indices=True)
+    new_data[:, :] = new_data[tuple(ind)]
+
+    return new_data
 
