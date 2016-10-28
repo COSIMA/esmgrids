@@ -48,7 +48,7 @@ class BaseGrid(object):
         self.x_v = x_v
         self.y_v = y_v
         self.z = levels
-        self.mask = mask
+        self.tmp_mask = mask
         self.description = description
 
         self.set_mask()
@@ -57,13 +57,13 @@ class BaseGrid(object):
 
     def set_mask(self):
 
-        if self.mask is None:
+        if self.tmp_mask is None:
             # Default is all unmasked, up to user to mask.
             self.mask_t = np.zeros((self.num_levels,
                                  self.num_lat_points, self.num_lon_points),
                                  dtype='int')
         else:
-            self.mask_t = self.mask
+            self.mask_t = self.tmp_mask
 
         # FIXME: is a correct generalisation?
         self.mask_u = self.mask_t
@@ -143,10 +143,10 @@ class BaseGrid(object):
         imask.units = 'unitless'
         # Invert the mask. SCRIP uses zero for points that do not
         # participate.
-        if len(self.mask.shape) == 2:
-            imask[:] = np.invert(self.mask[:])
+        if len(self.mask_t.shape) == 2:
+            imask[:] = 1 - self.mask_t[:]
         else:
-            imask[:] = np.invert(self.mask[0, :, :])
+            imask[:] = 1 - self.mask_t[0, :, :]
 
         corner_lat = f.createVariable('corner_lat', 'f8',
                                       ('lats', 'lons', 'grid_corners'))
@@ -201,12 +201,12 @@ class BaseGrid(object):
         if mask is not None:
             mask = mask
         else:
-            mask = self.mask
+            mask = self.mask_t
 
         if len(mask.shape) == 2:
-            imask[:] = np.invert(mask[:]).flatten()
+            imask[:] = 1 - mask[:].flatten()
         else:
-            imask[:] = np.invert(mask[0, :, :]).flatten()
+            imask[:] = 1 - mask[0, :, :].flatten()
 
         corner_lat = f.createVariable('grid_corner_lat', 'f8',
                                       ('grid_size', 'grid_corners'))
@@ -255,9 +255,13 @@ class BaseGrid(object):
         areas = np.zeros(clons.shape[1:])
         areas[:] = np.NAN
 
+
         m = basemap.Basemap(projection='laea', resolution='h',
                             llcrnrlon=0, llcrnrlat=-90.0,
                             urcrnrlon=360, urcrnrlat=90.0, lat_0=-90, lon_0=0)
+
+        # FIXME, don't do this. 
+        clats[np.where(clats == 90.0)] = 89.9995
 
         x, y = m(clons, clats)
 
