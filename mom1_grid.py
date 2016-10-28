@@ -31,8 +31,8 @@ class Mom1Grid(BaseGrid):
             self.area_t = f.variables['area_T'][:]
             self.area_u = f.variables['area_C'][:]
 
-            self.mask_t = 1 - f.variables['wet'][:]
-            self.mask_u = 1 - f.variables['wet'][:]
+            self.mask_t = f.variables['wet'][:]
+            self.mask_u = f.variables['wet'][:]
 
             self.clon_t = f.variables['x_vert_T'][:]
             self.clat_t = f.variables['y_vert_T'][:]
