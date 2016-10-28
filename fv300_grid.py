@@ -16,11 +16,14 @@ class FV300Grid(RegularGrid):
 
         with nc.Dataset(mask_file) as f:
             try:
-                mask = np.round(f.variables['WGOCN'][0, 0, :, :])
+                mask = np.round(f.variables['WGOCN'][0, 0, :, :-1])
             except KeyError, e:
                 print("Error: can't find ocean fraction var WGOCN in {}.".format(mask_file),
                        file=sys.stderr)
                 raise e
+
+        assert mask.shape[0] == num_lats
+        assert mask.shape[1] == num_lons
 
         super(FV300Grid, self).__init__(num_lons, num_lats, levels, mask=mask,
                                         description=description)
