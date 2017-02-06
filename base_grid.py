@@ -20,6 +20,7 @@ class BaseGrid(object):
                  area_t=None, area_u=None, area_v=None,
                  clat_t=None, clon_t=None, clat_u=None, clon_u=None, 
                  clat_v=None, clon_v=None,
+                 angle_t=None, angle_u=None,
                  mask_t=None, mask_u=None, mask_v=None,
                  levels=[0], description=''):
 
@@ -32,6 +33,7 @@ class BaseGrid(object):
         self.clat_t = clat_t; self.clon_t = clon_t
         self.clat_u = clat_u; self.clon_u = clon_u
         self.clat_v = clat_v; self.clon_v = clon_v
+        self.angle_t=angle_t; self.angle_u=angle_u
         self.mask_t = mask_t; self.mask_u = mask_u; self.mask_v = mask_v
 
         self.z = levels

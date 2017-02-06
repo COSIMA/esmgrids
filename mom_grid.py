@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-
 import numpy as np
 import netCDF4 as nc
+import exception
 
 from base_grid import BaseGrid
 
@@ -20,7 +17,7 @@ class MomGrid(BaseGrid):
     def fromfile(self, h_grid_def, v_grid_def=None, mask_file=None,
                  description='MOM tripolar'):
         """
-        Read in grid definition file from files.
+        Read in grid definition from file(s).
         """
 
         self.type = 'Arakawa B'
@@ -56,9 +53,8 @@ class MomGrid(BaseGrid):
                 x_u = f.variables['x'][:-1:2,:-1:2]
                 y_u = f.variables['y'][:-1:2,:-1:2]
 
-                # All points
-                self.x_dd = f.variables['x'][:]
-                self.y_dd = f.variables['y'][:]
+                angle_t = f.variables['angle_dx'][1::2,1::2]
+                angle_u = f.variables['angle_dx'][2::2,0:-1:2]
 
                 area = f.variables['area'][:]
                 self.area_t = np.zeros((area.shape[0]/2, area.shape[1]/2))
@@ -68,8 +64,8 @@ class MomGrid(BaseGrid):
                 self.area_t = area[0::2, 0::2] + area[1::2, 0::2] + \
                               area[1::2, 1::2] + area[0::2, 1::2]
 
-                # These need to wrap around the globe. Copy ocn_area and add an extra
-                # column at the end.
+                # These need to wrap around the globe. Copy ocn_area and
+                # add an extra column at the end.
                 area_ext = np.append(area[:], area[:, 0:1], axis=1)
                 self.area_u = area_ext[0::2, 1::2] + area_ext[1::2, 1::2] + \
                               area_ext[1::2, 2::2] + area_ext[0::2, 2::2]
@@ -97,6 +93,7 @@ class MomGrid(BaseGrid):
 
         return cls(x_t, y_t, x_u=x_u, y_u=y_u, area_t=area_t, area_u=area_u,
                    clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
+                   angle_t=angle_t, angle_u=angle_u,
                    mask_t=mask_t, mask_u=mask_u, levels=z,
                    description=description)
 
@@ -182,10 +179,11 @@ class MomGrid(BaseGrid):
 
         return clat_t, clon_t, clat_u, clon_u
 
-def write_mom_grid(filename, grid):
-    """
-    Write out a MOM grid to a netcdf file. The input can be any other grid
-    type. For example this could be used to write out a cice grid with the same
-    characteristics as a MOM grid.
-    """
-    pass
+    def write(self, filename):
+        """
+        Write out a MOM grid to a netcdf file. The input can be any other
+        grid type. For example this could be used to write out a MOM grid
+        with the same characteristics as a CICE grid.
+        """
+
+        raise exception.NotImplementedError
