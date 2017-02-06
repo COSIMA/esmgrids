@@ -1,3 +1,6 @@
+
+[![Code Health](https://landscape.io/github/DoublePrecision/esmgrids/master/landscape.svg?style=flat)](https://landscape.io/github/DoublePrecision/esmgrids/master)
+
 # esm-grids
 
 This package contains Python representations of Earth System Model grids. These are very useful, for example, for converting model grids between different formats.
