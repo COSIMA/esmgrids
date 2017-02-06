@@ -29,5 +29,5 @@ class T42Grid(RegularGrid):
         assert mask.shape[0] == num_lats
         assert mask.shape[1] == num_lons
 
-        super(T42Grid, self).__init__(num_lons, num_lats, levels, mask=mask,
-                                        description=description)
+        super(T42Grid, self).__init__(num_lons, num_lats, mask_t=mask,
+                                      levles=levels, description=description)

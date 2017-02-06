@@ -15,5 +15,5 @@ class WoaGrid(BaseGrid):
             depth = f.variables['depth'][:]
             mask = f.variables['t_an'][0, :, :, :].mask
 
-        super(WoaGrid, self).__init__(x_t=x_t, y_t=y_t, levels=depth, mask=mask,
+        super(WoaGrid, self).__init__(x_t=x_t, y_t=y_t, mask_t=mask, levels=depth
                                           description='WOA 1 degree grid')

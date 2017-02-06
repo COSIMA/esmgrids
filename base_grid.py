@@ -15,8 +15,28 @@ EARTH_AREA = 510072000e6
 
 class BaseGrid(object):
 
-    def __init__(self, x_t, y_t, levels=[0], x_u=None, y_u=None, x_v=None, y_v=None,
-                 mask=None, description=''):
+    def __init__(self, x_t, y_t, x_u=None, y_u=None, x_v=None, y_v=None,
+                 dx_t=None, dy_t=None, dx_u=None, dy_u=None, dx_v=None, dy_v=None,
+                 area_t=None, area_u=None, area_v=None,
+                 clat_t=None, clon_t=None, clat_u=None, clon_u=None, 
+                 clat_v=None, clon_v=None,
+                 mask_t=None, mask_u=None, mask_v=None,
+                 levels=[0], description=''):
+
+        self.x_t = x_t; self.y_t = y_t; self.x_u = x_u; self.y_u = y_u
+        self.x_v = x_v; self.y_v = y_v
+        self.dx_t = dx_t; self.dy_t = dy_t
+        self.dx_u = dx_u; self.dy_u = dy_u
+        self.dx_v = dx_v; self.dy_v = dy_v
+        self.area_t = area_t; self.area_u = area_u; self.area_v = area_v
+        self.clat_t = clat_t; self.clon_t = clon_t
+        self.clat_u = clat_u; self.clon_u = clon_u
+        self.clat_v = clat_v; self.clon_v = clon_v
+        self.mask_t = mask_t; self.mask_u = mask_u; self.mask_v = mask_v
+
+        self.z = levels
+        self.mask = mask
+        self.description = description
 
         if len(x_t.shape) == 1:
             # We expect this to be a regular grid.
@@ -29,49 +49,34 @@ class BaseGrid(object):
             self.y_t = np.tile(y_t, (x_t.shape[0], 1))
             self.y_t = self.y_t.transpose()
 
-            self.dy = abs(self.y_t[1, 0] - self.y_t[0, 0])
-            self.dx = abs(self.x_t[0, 1] - self.x_t[0, 0])
-        else:
-            # There is not constant dx, dy.
-            self.dy = None
-            self.dx = None
+            if not dx_t:
+                self.dx_t = abs(self.x_t[0, 1] - self.x_t[0, 0])
+            if not dy_t
+                self.dy_t = abs(self.y_t[1, 0] - self.y_t[0, 0])
 
-            self.x_t = x_t
-            self.y_t = y_t
+        if not self.mask_t:
+            # Default is all unmasked, up to user to mask.
+            self.mask_t = np.zeros((self.num_levels,
+                                 self.num_lat_points, self.num_lon_points),
+                                 dtype='int')
+        if not self.mask_u:
+            # FIXME
+            self.mask_u = self.mask_t
+        if not self.mask_v:
+            # FIXME
+            self.mask_v = self.mask_t
 
         self.num_lat_points = self.x_t.shape[0]
         self.num_lon_points = self.x_t.shape[1]
         self.num_levels = len(levels)
 
-        self.x_u = x_u
-        self.y_u = y_u
-        self.x_v = x_v
-        self.y_v = y_v
-        self.z = levels
-        self.tmp_mask = mask
-        self.description = description
+        if not self.clon_t or not self.clat_t:
+            self.make_corners()
 
-        self.set_mask()
-        self.make_corners()
-        self.calc_areas()
-
-    def set_mask(self):
-
-        if self.tmp_mask is None:
-            # Default is all unmasked, up to user to mask.
-            self.mask_t = np.zeros((self.num_levels,
-                                 self.num_lat_points, self.num_lon_points),
-                                 dtype='int')
-        else:
-            self.mask_t = self.tmp_mask
-
-        # FIXME: is a correct generalisation?
-        self.mask_u = self.mask_t
-        self.mask_v = self.mask_t
+        if not self.area_t:
+            self.calc_areas()
 
     def calc_areas(self):
-        """
-        """
 
         self.area_t = self.calc_area_of_polygons(self.clon_t, self.clat_t)
         assert(abs(1 - np.sum(self.area_t) / EARTH_AREA) < 5e-4)
@@ -112,53 +117,6 @@ class BaseGrid(object):
 
         self.clon_t = clon
         self.clat_t = clat
-
-
-    def write_test_scrip(self, filename):
-        """
-        Write out SCRIP grid contents in a format which is easier to read/test.
-        """
-
-        f = nc.Dataset(filename, 'w')
-
-        x = self.x_t
-        y = self.y_t
-        clat = self.clat_t
-        clon = self.clon_t
-
-        f.createDimension('lats', self.num_lat_points)
-        f.createDimension('lons', self.num_lon_points)
-        f.createDimension('grid_corners', 4)
-        f.createDimension('grid_rank', 2)
-
-        center_lat = f.createVariable('center_lat', 'f8', ('lats', 'lons'))
-        center_lat.units = 'degrees'
-        center_lat[:] = y[:]
-
-        center_lon = f.createVariable('center_lon', 'f8', ('lats', 'lons'))
-        center_lon.units = 'degrees'
-        center_lon[:] = x[:]
-
-        imask = f.createVariable('mask', 'i4', ('lats', 'lons'))
-        imask.units = 'unitless'
-        # Invert the mask. SCRIP uses zero for points that do not
-        # participate.
-        if len(self.mask_t.shape) == 2:
-            imask[:] = 1 - self.mask_t[:]
-        else:
-            imask[:] = 1 - self.mask_t[0, :, :]
-
-        corner_lat = f.createVariable('corner_lat', 'f8',
-                                      ('lats', 'lons', 'grid_corners'))
-        corner_lat.units = 'degrees'
-        corner_lat[:] = clat[:]
-
-        corner_lon = f.createVariable('corner_lon', 'f8',
-                                      ('lats', 'lons', 'grid_corners'))
-        corner_lon.units = 'degrees'
-        corner_lon[:] = clon[:]
-
-        f.close()
 
 
     def write_scrip(self, filename, mask=None, write_test_scrip=True, history=''):

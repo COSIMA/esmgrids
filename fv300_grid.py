@@ -22,11 +22,11 @@ class FV300Grid(RegularGrid):
                     print("Error: var WGOCN not in {}.".format(mask_file),
                            file=sys.stderr)
                     raise e
-        else:            
+        else:
             mask = np.ones((num_lats, num_lons))
 
         assert mask.shape[0] == num_lats
         assert mask.shape[1] == num_lons
 
-        super(FV300Grid, self).__init__(num_lons, num_lats, levels, mask=mask,
-                                        description=description)
+        super(FV300Grid, self).__init__(num_lons, num_lats, mask=mask,
+                                        levels=levels, description=description)

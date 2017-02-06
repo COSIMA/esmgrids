@@ -48,7 +48,7 @@ class TripolarGrid(BaseGrid):
             y_t = tripolar_grid.x_y[:]
             mask = tripolar_grid.mask[:]
 
-        super(TripolarGrid, self).__init__(x_t, y_t, levels, mask, description)
+        super(TripolarGrid, self).__init__(x_t, y_t, mask_t=mask, levels=levels, description)
 
     def make_corners(self):
 
