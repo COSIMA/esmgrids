@@ -1,6 +1,6 @@
 # esm-grids
 
-Python representation of Earth System Model grids.
+This package contains Python representations of Earth System Model grids. These are very useful, for example, for converting model grids between different formats.
 
 Grids currently supported:
 
@@ -15,4 +15,3 @@ There is code but not tested/used:
 
 - CICE4.1 tri-polar
 - Unified Model
-
