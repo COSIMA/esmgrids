@@ -11,7 +11,7 @@ NORTHERN_EXTENT = 89.9995
 class RegularGrid(BaseGrid):
 
     def __init__(self, num_lons, num_lats, mask=None,
-                 levels=levels, description=''):
+                 levels=[0], description=''):
 
         dx = 360.0 / num_lons
         dy = (abs(SOUTHERN_EXTENT) + abs(NORTHERN_EXTENT)) / (num_lats - 1)

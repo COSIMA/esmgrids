@@ -1,17 +1,25 @@
 
 import pytest
 import sh
+import os
 import numpy as np
 import netCDF4 as nc
 
+from mom_grid import MomGrid
+from cice_grid import CiceGrid
+
 data_tarball = 'test_data.tar.gz'
-data_tarball_url = 'http://s3-ap-southeast-2.amazonaws.com/dp-drop/oasis-grids/test/test_data.tar.gz'
+data_tarball_url = 'http://s3-ap-southeast-2.amazonaws.com/dp-drop/esmgrids/test/test_data.tar.gz'
 
 class Test():
     test_dir = os.path.dirname(os.path.realpath(__file__))
     test_data_dir = os.path.join(test_dir, 'test_data')
     test_data_tarball = os.path.join(test_dir, data_tarball)
-    output_dir = os.path.join(test_data_dir, 'output')
+    out_dir = os.path.join(test_data_dir, 'output')
+
+    @pytest.fixture
+    def output_dir(self):
+        return self.out_dir
 
     @pytest.fixture
     def input_dir(self):
@@ -23,10 +31,13 @@ class Test():
 
         return os.path.join(self.test_data_dir, 'input')
 
-    def test_convert_mom_to_cice(self, input_dir):
+    def test_convert_mom_to_cice(self, input_dir, output_dir):
         """
         Read in a MOM grid and write out a cice grid at the same resolution.
         """
 
-        mom_grid = mom_grid.MOMGrid(os.path.join(input_dir, 'ocean_grid.nc'),
-
+        mom = MomGrid.fromfile(os.path.join(input_dir, 'ocean_hgrid.nc'))
+        cice = CiceGrid.fromgrid(mom)
+        grid_file = os.path.join(output_dir, 'cice_grid.nc')
+        mask_file = os.path.join(output_dir, 'cice_mask.nc')
+        cice.write(grid_file, mask_file)

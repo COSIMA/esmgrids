@@ -1,5 +1,6 @@
 
 [![Code Health](https://landscape.io/github/DoublePrecision/esmgrids/master/landscape.svg?style=flat)](https://landscape.io/github/DoublePrecision/esmgrids/master)
+[![Build Status](https://travis-ci.org/DoublePrecision/esmgrids.svg?branch=master)](https://travis-ci.org/DoublePrecision/esmgrids)
 
 # esm-grids
 

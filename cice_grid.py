@@ -1,22 +1,16 @@
 
 import numpy as np
+import netCDF4 as nc
 
 from base_grid import BaseGrid
 
 class CiceGrid(BaseGrid):
 
-    def __init__(*args, **kwargs):
-        super(MomGrid, self).__init__(args, kwargs)
+    def __init__(self, **kwargs):
+        super(CiceGrid, self).__init__(**kwargs)
 
     @classmethod
-    def fromgrid(self, grid):
-        """
-        Read in grid definition from file(s).
-        """
-        self.__dict__ = grid.__dict__.copy()
-
-    @classmethod
-    def fromfile(self, h_grid_def, mask_file=None,
+    def fromfile(cls, h_grid_def, mask_file=None,
                  description='CICE tripolar'):
         """
         Read in grid definition from file(s).
@@ -40,20 +34,20 @@ class CiceGrid(BaseGrid):
 
         if mask_file is not None:
             with nc.Dataset(mask_file) as f:
-                self.mask_t = f.variables['mask'][:]
+                mask_t = f.variables['mask'][:]
 
         return cls(x_t, y_t, x_u=x_u, y_u=y_u,
-                   dx_t=dx_t, dy_t=dy_t
+                   dx_t=dx_t, dy_t=dy_t,
                    area_t=area_t, area_u=area_u,
                    mask_t=mask_t, description=description)
 
 
-    def write_grid(self, grid_filename, mask_filename):
+    def write(self, grid_filename, mask_filename):
         """
         Write out CICE grid to netcdf.
         """
 
-        f = nc.Dataset(self.grid_filename, 'w')
+        f = nc.Dataset(grid_filename, 'w')
 
         # Create dimensions.
         f.createDimension('nx', self.num_lon_points)
@@ -101,14 +95,16 @@ class CiceGrid(BaseGrid):
         ulon[:] = np.deg2rad(self.x_u)
 
         # Convert from m to cm.
-        htn[:] = self.htn * 100.
-        hte[:] = self.hte * 100.
+        htn[:] = self.dx_t * 100.
+        hte[:] = self.dy_t * 100.
 
-        angle[:] = np.deg2rad(self.angle[:])
-        angleT[:] = np.deg2rad(self.angleT[:])
+        angle[:] = np.deg2rad(self.angle_u[:])
+        angleT[:] = np.deg2rad(self.angle_t[:])
 
         f.close()
 
-        with nc.Dataset(self.mask_filename, 'r+') as f:
+        with nc.Dataset(mask_filename, 'w') as f:
+            f.createDimension('nx', self.num_lon_points)
+            f.createDimension('ny', self.num_lat_points)
             mask = f.createVariable('kmt', 'f8', dimensions=('ny', 'nx'))
             mask[:] = self.mask_t
