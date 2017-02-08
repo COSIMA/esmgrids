@@ -36,8 +36,12 @@ class Test():
         Read in a MOM grid and write out a cice grid at the same resolution.
         """
 
-        mom = MomGrid.fromfile(os.path.join(input_dir, 'ocean_hgrid.nc'))
+        mask = os.path.join(input_dir, 'ocean_01_mask.nc')
+        hgrid = os.path.join(input_dir, 'ocean_01_hgrid.nc')
+        mom = MomGrid.fromfile(hgrid, mask_file=mask)
         cice = CiceGrid.fromgrid(mom)
         grid_file = os.path.join(output_dir, 'cice_grid.nc')
         mask_file = os.path.join(output_dir, 'cice_mask.nc')
         cice.write(grid_file, mask_file)
+
+        # FIXME tests for the CICE grid.
