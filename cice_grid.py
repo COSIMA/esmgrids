@@ -32,6 +32,14 @@ class CiceGrid(BaseGrid):
             angle_t = np.rad2deg(f.variables['angleT'][:])
             angle_u = np.rad2deg(f.variables['angle'][:])
 
+            if 'clon_t' in f.variables:
+                clon_t = f.variables['clon_t'][:]
+                clat_t = f.variables['clat_t'][:]
+                clon_u = f.variables['clon_u'][:]
+                clat_u = f.variables['clat_u'][:]
+            else:
+                clon_t = clat_t = clon_u = clat_u = None
+
         if mask_file is not None:
             with nc.Dataset(mask_file) as f:
                 mask_t = f.variables['mask'][:]
@@ -39,6 +47,7 @@ class CiceGrid(BaseGrid):
         return cls(x_t, y_t, x_u=x_u, y_u=y_u,
                    dx_t=dx_t, dy_t=dy_t,
                    area_t=area_t, area_u=area_u,
+                   clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
                    mask_t=mask_t, description=description)
 
 
@@ -52,6 +61,7 @@ class CiceGrid(BaseGrid):
         # Create dimensions.
         f.createDimension('nx', self.num_lon_points)
         f.createDimension('ny', self.num_lat_points)
+        f.createDimension('nc', 4)
 
         # Make all CICE grid variables.
         ulat = f.createVariable('ulat', 'f8', dimensions=('ny', 'nx'))
@@ -66,18 +76,39 @@ class CiceGrid(BaseGrid):
         tlon = f.createVariable('tlon', 'f8', dimensions=('ny', 'nx'))
         tlon.units = "radians"
         tlon.title = "Longitude of T points"
+
+        if self.clon_t is not None:
+            clon_t = f.createVariable('clon_t', 'f8',
+                                      dimensions=('4', 'ny', 'nx'))
+            clon_t.units = "radians"
+            clon_t.title = "Longitude of T cell corners"
+            clat_t = f.createVariable('clat_t', 'f8',
+                                      dimensions=('4', 'ny', 'nx'))
+            clat_t.units = "radians"
+            clat_t.title = "Latitude of T cell corners"
+            clon_u = f.createVariable('clon_u', 'f8',
+                                      dimensions=('4', 'ny', 'nx'))
+            clon_u.units = "radians"
+            clon_u.title = "Longitude of U cell corners"
+            clat_u = f.createVariable('clat_u', 'f8',
+                                      dimensions=('4', 'ny', 'nx'))
+            clat_u.units = "radians"
+            clat_u.title = "Latitude of U cell corners"
+
         htn = f.createVariable('htn', 'f8', dimensions=('ny', 'nx'))
         htn.units = "cm"
         htn.title = "Width of T cells on North side."
         hte = f.createVariable('hte', 'f8', dimensions=('ny', 'nx'))
         hte.units = "cm"
         hte.title = "Width of T cells on East side."
+
         angle = f.createVariable('angle', 'f8', dimensions=('ny', 'nx'))
         angle.units = "radians"
         angle.title = "Rotation angle of U cells."
         angleT = f.createVariable('angleT', 'f8', dimensions=('ny', 'nx'))
         angleT.units = "radians"
         angleT.title = "Rotation angle of T cells."
+
         area_t = f.createVariable('tarea', 'f8', dimensions=('ny', 'nx'))
         area_t.units = "m^2"
         area_t.title = "Area of T cells."
@@ -93,6 +124,12 @@ class CiceGrid(BaseGrid):
         tlon[:] = np.deg2rad(self.x_t)
         ulat[:] = np.deg2rad(self.y_u)
         ulon[:] = np.deg2rad(self.x_u)
+
+        if self.clon_t is not None:
+            clon_t[:] = np.deg2rad(self.clon_t)
+            clat_t[:] = np.deg2rad(self.clat_t)
+            clon_u[:] = np.deg2rad(self.clon_u)
+            clat_u[:] = np.deg2rad(self.clat_u)
 
         # Convert from m to cm.
         htn[:] = self.dx_t * 100.
