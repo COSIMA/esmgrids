@@ -1,7 +1,7 @@
 
 import os
 import netCDF4 as nc
-from base_grid import BaseGrid
+from .base_grid import BaseGrid
 
 class OasisGrid(BaseGrid):
     """

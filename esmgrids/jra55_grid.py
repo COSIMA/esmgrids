@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from base_grid import BaseGrid
+from .base_grid import BaseGrid
 
 class Jra55Grid(BaseGrid):
 

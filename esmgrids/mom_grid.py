@@ -1,7 +1,7 @@
 import numpy as np
 import netCDF4 as nc
 
-from base_grid import BaseGrid
+from .base_grid import BaseGrid
 
 class MomGrid(BaseGrid):
     """
@@ -200,5 +200,4 @@ def make_corners(x, y):
     assert(not np.isnan(np.sum(clat_u)))
 
     return clat_t, clon_t, clat_u, clon_u, None, None
-
 

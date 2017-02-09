@@ -2,7 +2,7 @@
 from __future__ import print_function
 
 import numpy as np
-from base_grid import BaseGrid
+from .base_grid import BaseGrid
 
 # Various regirdding techniques (e.g. SCRIP) don't cope well with singularities.
 SOUTHERN_EXTENT = -89.9995

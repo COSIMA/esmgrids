@@ -1,5 +1,5 @@
 
-from regular_grid import RegularGrid
+from .regular_grid import RegularGrid
 
 class Core2Grid(RegularGrid):
 

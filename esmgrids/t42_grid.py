@@ -5,7 +5,7 @@ from __future__ import print_function
 import sys
 import numpy as np
 import netCDF4 as nc
-from regular_grid import RegularGrid
+from .regular_grid import RegularGrid
 
 class T42Grid(RegularGrid):
 
@@ -19,7 +19,7 @@ class T42Grid(RegularGrid):
             with nc.Dataset(mask_file) as f:
                 try:
                     mask = np.round(f.variables['WGOCN'][0, 0, :, :-1])
-                except KeyError, e:
+                except KeyError as e:
                     print("Error: var WGOCN not in {}.".format(mask_file),
                            file=sys.stderr)
                     raise e

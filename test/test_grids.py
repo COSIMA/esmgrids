@@ -5,8 +5,8 @@ import os
 import numpy as np
 import netCDF4 as nc
 
-from mom_grid import MomGrid
-from cice_grid import CiceGrid
+from esmgrids.mom_grid import MomGrid
+from esmgrids.cice_grid import CiceGrid
 
 data_tarball = 'test_data.tar.gz'
 data_tarball_url = 'http://s3-ap-southeast-2.amazonaws.com/dp-drop/esmgrids/test/test_data.tar.gz'

@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-
 import numpy as np
 import netCDF4 as nc
-from base_grid import BaseGrid
+from .base_grid import BaseGrid
 
 class NemoGrid(BaseGrid):
 
@@ -58,8 +54,8 @@ class NemoGrid(BaseGrid):
                 x_v=x_v, y_v=y_v,
                 area_t=area_t, area_u=area_u, area_v=area_v,
                 clat_t=clat_t, clon_t=clon_t,
-                clat_u=clat_u, clon_t=clon_u,
-                clat_t=clat_v, clon_t=clon_v,
+                clat_u=clat_u, clon_u=clon_u,
+                clat_v=clat_v, clon_v=clon_v,
                 mask_t=mask_t, mask_u=mask_u, mask_v=mask_v,
                 levels=z,
                 description=description)
