@@ -79,19 +79,19 @@ class CiceGrid(BaseGrid):
 
         if self.clon_t is not None:
             clon_t = f.createVariable('clon_t', 'f8',
-                                      dimensions=('4', 'ny', 'nx'))
+                                      dimensions=('nc', 'ny', 'nx'))
             clon_t.units = "radians"
             clon_t.title = "Longitude of T cell corners"
             clat_t = f.createVariable('clat_t', 'f8',
-                                      dimensions=('4', 'ny', 'nx'))
+                                      dimensions=('nc', 'ny', 'nx'))
             clat_t.units = "radians"
             clat_t.title = "Latitude of T cell corners"
             clon_u = f.createVariable('clon_u', 'f8',
-                                      dimensions=('4', 'ny', 'nx'))
+                                      dimensions=('nc', 'ny', 'nx'))
             clon_u.units = "radians"
             clon_u.title = "Longitude of U cell corners"
             clat_u = f.createVariable('clat_u', 'f8',
-                                      dimensions=('4', 'ny', 'nx'))
+                                      dimensions=('nc', 'ny', 'nx'))
             clat_u.units = "radians"
             clat_u.title = "Latitude of U cell corners"
 
