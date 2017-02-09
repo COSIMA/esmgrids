@@ -17,13 +17,19 @@ class OasisGrid(BaseGrid):
         assert(len(grid_name) >= 3)
 
         self.name = grid_name
-        # Arakawa B or C grids.
         self.grid_type = model_grid.type
-        assert self.grid_type == 'Arakawa A' or self.grid_type == 'Arakawa B' \
-                or self.grid_type == 'Arakawa C' or self.grid_type == 'Spectral'
+
+        if self.grid_type == 'Arakawa A':
+            cells = ('t')
+        elif self.grid_type == 'Arakawa B':
+            self.cells = ('t', 'u')
+        elif self.grid_type == 'Arakawa C':
+            self.cells = ('t', 'u', 'v')
+        elif self.grid_type == 'Spectral':
+            cells = ('t')
+        else:
 
         self.model_grid = model_grid
-        self.cells = cells
 
     def write_grids(self, grids_filename):
         """
