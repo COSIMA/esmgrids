@@ -17,16 +17,16 @@ class FV300Grid(RegularGrid):
         if mask_file:
             with nc.Dataset(mask_file) as f:
                 try:
-                    mask = np.round(f.variables['WGOCN'][0, 0, :, :-1])
+                    mask_t = np.round(f.variables['WGOCN'][0, 0, :, :-1])
                 except KeyError as e:
                     print("Error: var WGOCN not in {}.".format(mask_file),
                            file=sys.stderr)
                     raise e
         else:
-            mask = np.ones((num_lats, num_lons))
+            mask_t = np.ones((num_lats, num_lons))
 
-        assert mask.shape[0] == num_lats
-        assert mask.shape[1] == num_lons
+        assert mask_t.shape[0] == num_lats
+        assert mask_t.shape[1] == num_lons
 
-        super(FV300Grid, self).__init__(num_lons, num_lats, mask=mask,
+        super(FV300Grid, self).__init__(num_lons, num_lats, mask_t=mask_t,
                                         levels=levels, description=description)

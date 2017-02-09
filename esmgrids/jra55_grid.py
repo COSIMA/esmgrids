@@ -1,11 +1,10 @@
 
 import numpy as np
 
-from .base_grid import BaseGrid
+from .regular_grid import RegularGrid
 
-class Jra55Grid(BaseGrid):
+class Jra55Grid(RegularGrid):
 
-    def __init__(*args, **kwargs):
-        super(JraGrid, self).__init__(args, kwargs)
-
-
+    def __init__(self, description='JRA55 regular grid'):
+        self.type = 'Arakawa A'
+        super(Jra55Grid, self).__init__(360, 180, description=description)

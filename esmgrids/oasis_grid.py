@@ -246,7 +246,8 @@ class OasisGrid(BaseGrid):
                     raise e
             tmp.units = '0/1:o/l'
             tmp.title = "{} grid {}-cell land-sea mask.".format(self.name, cell.upper())
-            # Flip the mask. OASIS uses 1 = masked, 0 = unmasked.
-            tmp[:] = (1 - mask[:])
+            # OASIS uses 1 = masked, 0 = unmasked. This is the same as the
+            # esmgrids convention
+            tmp[:] = mask[:]
 
         f.close()

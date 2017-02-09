@@ -10,7 +10,7 @@ NORTHERN_EXTENT = 89.9995
 
 class RegularGrid(BaseGrid):
 
-    def __init__(self, num_lons, num_lats, mask=None,
+    def __init__(self, num_lons, num_lats, mask_t=None,
                  levels=[0], description=''):
 
         dx = 360.0 / num_lons
@@ -21,7 +21,9 @@ class RegularGrid(BaseGrid):
         # Set lats and lons.
         lons = np.linspace(0, 360, num_lons, endpoint=False)
         # lat points exclude the poles.
-        lats = np.linspace(SOUTHERN_EXTENT + dy_half, NORTHERN_EXTENT - dy_half, num_lats)
+        lats = np.linspace(SOUTHERN_EXTENT + dy_half,
+                           NORTHERN_EXTENT - dy_half, num_lats)
 
-        super(RegularGrid, self).__init__(lons, lats, mask=mask,
-                                          levels=levels, description=description)
+        super(RegularGrid, self).__init__(x_t=lons, y_t=lats, mask_t=mask_t,
+                                          levels=levels,
+                                          description=description)

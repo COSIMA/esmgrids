@@ -7,6 +7,8 @@ from .base_grid import BaseGrid
 class CiceGrid(BaseGrid):
 
     def __init__(self, **kwargs):
+        self.type = 'Arakawa B'
+
         super(CiceGrid, self).__init__(**kwargs)
 
     @classmethod
@@ -42,9 +44,9 @@ class CiceGrid(BaseGrid):
 
         if mask_file is not None:
             with nc.Dataset(mask_file) as f:
-                mask_t = f.variables['mask'][:]
+                mask_t = f.variables['kmt'][:]
 
-        return cls(x_t, y_t, x_u=x_u, y_u=y_u,
+        return cls(x_t=x_t, y_t=y_t, x_u=x_u, y_u=y_u,
                    dx_t=dx_t, dy_t=dy_t,
                    area_t=area_t, area_u=area_u,
                    clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,

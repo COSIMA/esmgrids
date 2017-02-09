@@ -41,6 +41,9 @@ class MomGrid(BaseGrid):
                 clon_u = f.variables['x_vert_C'][:]
                 clat_u = f.variables['y_vert_C'][:]
 
+                dx_t = dy_t = dx_u = dy_u = None
+                angle_t = angle_u = None
+
             else:
 
                 # Select points from double density horizontal grid.
@@ -86,14 +89,18 @@ class MomGrid(BaseGrid):
 
         if mask_file is not None:
             with nc.Dataset(mask_file) as f:
+                # MOM default is 0 masked, 1 not masked.
+                # Internal representation is True for masked, False
+                # not masked.
                 if 'wet' in f.variables:
-                    mask_t = f.variables['wet'][:]
-                    mask_u = f.variables['wet'][:]
+                    mask = np.ones_like(f.variables['wet'], dtype=bool)
+                    mask[f.variables['wet'][:] >= 0.5] = False
                 else:
-                    mask = np.zeros_like(f.variables['mask'], dtype=bool)
-                    mask[f.variables['mask'][:] >= 0.5] = True
-                    mask_t = mask
-                    mask_u = mask
+                    mask = np.ones_like(f.variables['mask'], dtype=bool)
+                    mask[f.variables['mask'][:] >= 0.5] = False
+                mask_t = mask
+                # FIXME: this is not correct.
+                mask_u = mask
         else:
             mask_t = None
             mask_u = None

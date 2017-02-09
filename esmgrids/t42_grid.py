@@ -24,10 +24,11 @@ class T42Grid(RegularGrid):
                            file=sys.stderr)
                     raise e
         else:
-            mask = np.ones((num_lats, num_lons))
+            # Default is all unmasked.
+            mask = np.zeros((num_lats, num_lons))
 
         assert mask.shape[0] == num_lats
         assert mask.shape[1] == num_lons
 
         super(T42Grid, self).__init__(num_lons, num_lats, mask_t=mask,
-                                      levles=levels, description=description)
+                                      levels=levels, description=description)

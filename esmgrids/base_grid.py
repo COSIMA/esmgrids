@@ -13,7 +13,7 @@ class BaseGrid(object):
 
     def __init__(self, **kwargs):
 
-        self.x_t = kwargs.get('x_t', None); self.y_t = kwargs.get('y_t', None)
+        x_t = kwargs.get('x_t', None); y_t = kwargs.get('y_t', None)
         self.x_u = kwargs.get('x_u', None); self.y_u = kwargs.get('y_u', None)
         self.x_v = kwargs.get('x_v', None); self.y_v = kwargs.get('y_v', None)
 
@@ -43,21 +43,26 @@ class BaseGrid(object):
         self.z = kwargs.get('levels', [0])
         self.description = kwargs.get('description', '')
 
-        if len(self.x_t.shape) == 1:
+        if len(x_t.shape) == 1:
+            # FIXME this shouldn't be here, it should be in
+            # regular_grid.py
             # We expect this to be a regular grid.
-            assert np.allclose(np.diff(self.x_t),
-                     np.array([self.x_t[1] - self.x_t[0]]*(len(self.x_t)-1)))
-            assert np.allclose(np.diff(self.y_t),
-                     np.array([self.y_t[1] - self.y_t[0]]*(len(self.y_t)-1)), atol=1e-4)
+            assert np.allclose(np.diff(x_t),
+                     np.array([x_t[1] - x_t[0]]*(len(x_t)-1)))
+            assert np.allclose(np.diff(y_t),
+                     np.array([y_t[1] - y_t[0]]*(len(y_t)-1)), atol=1e-4)
             # Turn into tiled
-            self.x_t = np.tile(self.x_t, (self.y_t.shape[0], 1))
-            self.y_t = np.tile(self.y_t, (self.x_t.shape[0], 1))
+            self.x_t = np.tile(x_t, (y_t.shape[0], 1))
+            self.y_t = np.tile(y_t, (x_t.shape[0], 1))
             self.y_t = self.y_t.transpose()
 
             if not self.dx_t:
                 self.dx_t = abs(self.x_t[0, 1] - self.x_t[0, 0])
             if not self.dy_t:
                 self.dy_t = abs(self.y_t[1, 0] - self.y_t[0, 0])
+        else:
+            self.x_t = x_t
+            self.y_t = x_t
 
         self.num_lat_points = self.x_t.shape[0]
         self.num_lon_points = self.x_t.shape[1]
@@ -77,7 +82,7 @@ class BaseGrid(object):
 
         if self.clon_t is None or self.clat_t is None:
             self.clat_t, self.clon_t, _, _, _, _ = \
-                self.make_corners(self.x_t, self.y_t, dx, dy)
+                make_corners(self.x_t, self.y_t, self.dx_t, self.dy_t)
 
         if self.area_t is None:
             self.calc_areas()
@@ -189,7 +194,6 @@ class BaseGrid(object):
         areas = np.zeros(clons.shape[1:])
         areas[:] = np.NAN
 
-
         m = basemap.Basemap(projection='laea', resolution='h',
                             llcrnrlon=0, llcrnrlat=-90.0,
                             urcrnrlon=360, urcrnrlat=90.0, lat_0=-90, lon_0=0)
@@ -201,7 +205,7 @@ class BaseGrid(object):
 
         for j in range(x.shape[1]):
             for i in range(x.shape[2]):
-                areas[j, i] = area_polygon(zip(x[:, j, i], y[:, j, i]))
+                areas[j, i] = area_polygon(list(zip(x[:, j, i], y[:, j, i])))
 
         assert(np.sum(areas) is not np.NAN)
         assert(np.min(areas) > 0)
@@ -209,6 +213,9 @@ class BaseGrid(object):
         return areas
 
 def make_corners(x, y, dx, dy):
+    """
+    FIXME: this should be in regular_grid.py
+    """
 
     dx_half = dx / 2.0
     dy_half = dy / 2.0
@@ -241,5 +248,5 @@ def make_corners(x, y, dx, dy):
     assert(np.all(clat[2, -1, :] == np.max(y) + dy_half))
     assert(np.all(clat[3, -1, :] == np.max(y) + dy_half))
 
-    return clat_t, clon_t, None, None, None, None
+    return clat, clon, None, None, None, None
 
