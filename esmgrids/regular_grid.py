@@ -15,8 +15,8 @@ class RegularGrid(BaseGrid):
 
         dx = 360.0 / num_lons
         dy = (abs(SOUTHERN_EXTENT) + abs(NORTHERN_EXTENT)) / (num_lats - 1)
-        dx_half = dx / 2
-        dy_half = dy / 2
+        dx_half = dx / 2.
+        dy_half = dy / 2.
 
         # Set lats and lons.
         lons = np.linspace(0, 360, num_lons, endpoint=False)

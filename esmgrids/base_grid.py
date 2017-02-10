@@ -1,13 +1,8 @@
 
 import numpy as np
 import netCDF4 as nc
-import warnings
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import mpl_toolkits.basemap as basemap
-
-EARTH_AREA = 510072000e6
+from .util import calc_area_of_polygons
 
 class BaseGrid(object):
 
@@ -17,7 +12,7 @@ class BaseGrid(object):
         self.x_u = kwargs.get('x_u', None); self.y_u = kwargs.get('y_u', None)
         self.x_v = kwargs.get('x_v', None); self.y_v = kwargs.get('y_v', None)
 
-        self.dx_t = kwargs.get('dx_t', None); self.dy_t = kwargs.get('dy_t', None)
+        dx_t = kwargs.get('dx_t', None); dy_t = kwargs.get('dy_t', None)
         self.dx_u = kwargs.get('dx_u', None); self.dy_u = kwargs.get('dy_u', None)
         self.dx_v = kwargs.get('dx_v', None); self.dy_v = kwargs.get('dy_v', None)
 
@@ -44,25 +39,31 @@ class BaseGrid(object):
         self.description = kwargs.get('description', '')
 
         if len(x_t.shape) == 1:
-            # FIXME this shouldn't be here, it should be in
-            # regular_grid.py
-            # We expect this to be a regular grid.
-            assert np.allclose(np.diff(x_t),
-                     np.array([x_t[1] - x_t[0]]*(len(x_t)-1)))
-            assert np.allclose(np.diff(y_t),
-                     np.array([y_t[1] - y_t[0]]*(len(y_t)-1)), atol=1e-4)
-            # Turn into tiled
+            # Tile x_t
             self.x_t = np.tile(x_t, (y_t.shape[0], 1))
             self.y_t = np.tile(y_t, (x_t.shape[0], 1))
             self.y_t = self.y_t.transpose()
-
-            if not self.dx_t:
-                self.dx_t = abs(self.x_t[0, 1] - self.x_t[0, 0])
-            if not self.dy_t:
-                self.dy_t = abs(self.y_t[1, 0] - self.y_t[0, 0])
         else:
             self.x_t = x_t
             self.y_t = x_t
+
+        if dx_t is not None and len(dx_t.shape) == 1:
+            # Tile dx_t
+            self.dx_t = np.tile(x_t, (dy_t.shape[0], 1))
+            self.dy_t = np.tile(y_t, (dx_t.shape[0], 1))
+            self.dy_t = self.dy_t.transpose()
+        elif dx_t is None:
+            self.dx_t = np.zeros_like(self.x_t)
+            self.dy_t = np.zeros_like(self.y_t)
+
+            # Repeat the first row/column using the values closest.
+            self.dx_t[:, 1:] = self.x_t[:, 1:] - self.x_t[:, :-1]
+            self.dx_t[:, 0] = self.x_t[:, 1] - self.x_t[:, 0]
+            self.dy_t[1:, :] = self.y_t[1:, :] - self.y_t[:-1, :]
+            self.dy_t[0, :] = self.y_t[1, :] - self.y_t[0, :]
+        else:
+            self.dx_t = dx_t
+            self.dy_t = dy_t
 
         self.num_lat_points = self.x_t.shape[0]
         self.num_lon_points = self.x_t.shape[1]
@@ -85,7 +86,7 @@ class BaseGrid(object):
                 make_corners(self.x_t, self.y_t, self.dx_t, self.dy_t)
 
         if self.area_t is None:
-            self.calc_areas()
+            self.area_t = calc_area_of_polygons(self.clon_t, self.clat_t)
 
     @classmethod
     def fromgrid(cls, grid):
@@ -95,14 +96,7 @@ class BaseGrid(object):
 
         return cls(**grid.__dict__)
 
-
-    def calc_areas(self):
-
-        self.area_t = self.calc_area_of_polygons(self.clon_t, self.clat_t)
-        assert(abs(1 - np.sum(self.area_t) / EARTH_AREA) < 5e-4)
-
-
-    def write_scrip(self, filename, mask=None, history=''):
+    def write_scrip(self, filename, mask=None, write_test_scrip=True, history=''):
         """
         Write out grid in SCRIP format.
         """
@@ -161,57 +155,58 @@ class BaseGrid(object):
         f.history = history
         f.close()
 
-    def calc_area_of_polygons(self, clons, clats):
+        if write_test_scrip:
+            self.write_test_scrip(filename + '_test')
+
+
+    def write_test_scrip(self, filename):
         """
-        Calculate the area of lat-lon polygons.
-
-        We project sphere onto a flat surface using an equal area projection
-        and then calculate the area of flat polygon.
+        Write out SCRIP grid contents in a format which is easier to read/test.
         """
 
-        def area_polygon(p):
-            """
-            Calculate the area of a polygon.
+        f = nc.Dataset(filename, 'w')
 
-            Input is a polygon represented as a list of (x,y) vertex
-            coordinates, implicitly wrapping around from the last vertex to the
-            first.
+        x = self.x_t
+        y = self.y_t
+        clat = self.clat_t
+        clon = self.clon_t
 
-            See http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
-            """
+        f.createDimension('lats', self.num_lat_points)
+        f.createDimension('lons', self.num_lon_points)
+        f.createDimension('grid_corners', 4)
+        f.createDimension('grid_rank', 2)
 
-            def segments(v):
-                return zip(v, v[1:] + [v[0]])
+        center_lat = f.createVariable('center_lat', 'f8', ('lats', 'lons'))
+        center_lat.units = 'degrees'
+        center_lat[:] = y[:]
 
-            return 0.5 * abs(sum(x0*y1 - x1*y0
-                                 for ((x0, y0), (x1, y1)) in segments(p)))
+        center_lon = f.createVariable('center_lon', 'f8', ('lats', 'lons'))
+        center_lon.units = 'degrees'
+        center_lon[:] = x[:]
 
+        imask = f.createVariable('mask', 'i4', ('lats', 'lons'))
+        imask.units = 'unitless'
+        # Invert the mask. SCRIP uses zero for points that do not
+        # participate.
+        if len(self.mask_t.shape) == 2:
+            imask[:] = 1 - self.mask_t[:]
+        else:
+            imask[:] = 1 - self.mask_t[0, :, :]
 
-        areas = np.zeros(clons.shape[1:])
-        areas[:] = np.NAN
+        corner_lat = f.createVariable('corner_lat', 'f8',
+                                      ('lats', 'lons', 'grid_corners'))
+        corner_lat.units = 'degrees'
+        corner_lat[:] = clat[:]
 
-        m = basemap.Basemap(projection='laea', resolution='h',
-                            llcrnrlon=0, llcrnrlat=-90.0,
-                            urcrnrlon=360, urcrnrlat=90.0, lat_0=-90, lon_0=0)
+        corner_lon = f.createVariable('corner_lon', 'f8',
+                                      ('lats', 'lons', 'grid_corners'))
+        corner_lon.units = 'degrees'
+        corner_lon[:] = clon[:]
 
-        # FIXME, don't do this. 
-        clats[np.where(clats == 90.0)] = 89.9995
+        f.close()
 
-        x, y = m(clons, clats)
-
-        for j in range(x.shape[1]):
-            for i in range(x.shape[2]):
-                areas[j, i] = area_polygon(list(zip(x[:, j, i], y[:, j, i])))
-
-        assert(np.sum(areas) is not np.NAN)
-        assert(np.min(areas) > 0)
-
-        return areas
 
 def make_corners(x, y, dx, dy):
-    """
-    FIXME: this should be in regular_grid.py
-    """
 
     dx_half = dx / 2.0
     dy_half = dy / 2.0
@@ -237,12 +232,12 @@ def make_corners(x, y, dx, dy):
     assert(not np.isnan(np.sum(clat)))
 
     # The bottom latitude band should always be Southern extent.
-    assert(np.all(clat[0, 0, :] == np.min(y) - dy_half))
-    assert(np.all(clat[1, 0, :] == np.min(y) - dy_half))
+    assert(np.all(clat[0, 0, :] == np.min(y) - dy_half[0, :]))
+    assert(np.all(clat[1, 0, :] == np.min(y) - dy_half[0, :]))
 
     # The top latitude band should always be Northern extent.
-    assert(np.all(clat[2, -1, :] == np.max(y) + dy_half))
-    assert(np.all(clat[3, -1, :] == np.max(y) + dy_half))
+    assert(np.all(clat[2, -1, :] == np.max(y) + dy_half[-1, :]))
+    assert(np.all(clat[3, -1, :] == np.max(y) + dy_half[-1, :]))
 
     return clat, clon, None, None, None, None
 

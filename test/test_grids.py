@@ -6,10 +6,26 @@ import numpy as np
 import netCDF4 as nc
 
 from esmgrids.mom_grid import MomGrid
+from esmgrids.core2_grid import Core2Grid
 from esmgrids.cice_grid import CiceGrid
+from esmgrids.util import calc_area_of_polygons
 
 data_tarball = 'test_data.tar.gz'
 data_tarball_url = 'http://s3-ap-southeast-2.amazonaws.com/dp-drop/esmgrids/test/test_data.tar.gz'
+
+EARTH_AREA = 510072000e6
+
+def check_corners(grid):
+    """
+    Do some checks on the corners.
+    """
+
+    # Check that no cell has two corners at the same location.
+
+    # Check total area
+    area_t = calc_area_of_polygons(grid.clon_t, grid.clat_t)
+    assert(abs(1 - np.sum(area_t) / EARTH_AREA) < 5e-4)
+
 
 class Test():
     test_dir = os.path.dirname(os.path.realpath(__file__))
@@ -44,4 +60,18 @@ class Test():
         mask_file = os.path.join(output_dir, 'cice_mask.nc')
         cice.write(grid_file, mask_file)
 
-        # FIXME tests for the CICE grid.
+        # FIXME actually test that the CICE grid is good.
+
+    def test_corners(self, input_dir):
+        """
+        Check some corners fields, clat_t, clon_t etc.
+        """
+
+        hgrid = os.path.join(input_dir, 't_10.0001.nc')
+        core2 = Core2Grid(hgrid)
+        area_t = check_corners(core2)
+
+        #mask = os.path.join(input_dir, 'ocean_01_mask.nc')
+        #hgrid = os.path.join(input_dir, 'ocean_01_hgrid.nc')
+        #mom = MomGrid.fromfile(hgrid, mask_file=mask)
+        #check_corners(mom)
