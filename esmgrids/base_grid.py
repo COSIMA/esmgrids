@@ -45,7 +45,7 @@ class BaseGrid(object):
             self.y_t = self.y_t.transpose()
         else:
             self.x_t = x_t
-            self.y_t = x_t
+            self.y_t = y_t
 
         if dx_t is not None and len(dx_t.shape) == 1:
             # Tile dx_t
@@ -144,12 +144,18 @@ class BaseGrid(object):
         corner_lat = f.createVariable('grid_corner_lat', 'f8',
                                       ('grid_size', 'grid_corners'))
         corner_lat.units = 'degrees'
-        corner_lat[:] = clat[:].flatten()
+        corner_lat[:, 0] = clat[0, :, :].flatten()
+        corner_lat[:, 1] = clat[1, :, :].flatten()
+        corner_lat[:, 2] = clat[2, :, :].flatten()
+        corner_lat[:, 3] = clat[3, :, :].flatten()
 
         corner_lon = f.createVariable('grid_corner_lon', 'f8',
                                       ('grid_size', 'grid_corners'))
         corner_lon.units = 'degrees'
-        corner_lon[:] = clon[:].flatten()
+        corner_lon[:, 0] = clon[0, :, :].flatten()
+        corner_lon[:, 1] = clon[1, :, :].flatten()
+        corner_lon[:, 2] = clon[2, :, :].flatten()
+        corner_lon[:, 3] = clon[3, :, :].flatten()
 
         f.title = self.description
         f.history = history
@@ -196,12 +202,18 @@ class BaseGrid(object):
         corner_lat = f.createVariable('corner_lat', 'f8',
                                       ('lats', 'lons', 'grid_corners'))
         corner_lat.units = 'degrees'
-        corner_lat[:] = clat[:]
+        corner_lat[:, :, 0] = clat[0, :, :].flatten()
+        corner_lat[:, :, 1] = clat[1, :, :].flatten()
+        corner_lat[:, :, 2] = clat[2, :, :].flatten()
+        corner_lat[:, :, 3] = clat[3, :, :].flatten()
 
         corner_lon = f.createVariable('corner_lon', 'f8',
                                       ('lats', 'lons', 'grid_corners'))
         corner_lon.units = 'degrees'
-        corner_lon[:] = clon[:]
+        corner_lon[:, :, 0] = clon[0, :, :].flatten()
+        corner_lon[:, :, 1] = clon[1, :, :].flatten()
+        corner_lon[:, :, 2] = clon[2, :, :].flatten()
+        corner_lon[:, :, 3] = clon[3, :, :].flatten()
 
         f.close()
 
