@@ -9,11 +9,12 @@ from .regular_grid import RegularGrid
 
 class T42Grid(RegularGrid):
 
-    def __init__(self, num_lons, num_lats, num_levels, mask_file=None, description=''):
+    def __init__(self, num_lons=128, num_lats=64, num_levels=1, mask_file=None, description=''):
 
         levels = range(num_levels)
 
         self.type = 'Spectral'
+        self.full_name = 'T42'
 
         if mask_file:
             with nc.Dataset(mask_file) as f:

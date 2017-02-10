@@ -8,11 +8,12 @@ from .regular_grid import RegularGrid
 
 class FV300Grid(RegularGrid):
 
-    def __init__(self, num_lons, num_lats, num_levels, mask_file=None, description=''):
+    def __init__(self, num_lons=128, num_lats=64, num_levels=1, mask_file=None, description=''):
 
         levels = range(num_levels)
 
         self.type = 'Arakawa A'
+        self.full_name = 'FV300'
 
         if mask_file:
             with nc.Dataset(mask_file) as f:

@@ -6,8 +6,8 @@ class NemoGrid(BaseGrid):
 
     def __init__(self, h_grid_def, v_grid_def=None, mask_file=None,
                     description='NEMO tripolar'):
-
         self.type = 'Arakawa C'
+        self.full_name = 'NEMO'
 
         with nc.Dataset(h_grid_def) as f:
 

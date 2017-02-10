@@ -99,7 +99,8 @@ class OasisGrid(BaseGrid):
                 else:
                     raise e
             tmp.units = "degrees_north"
-            tmp.title = "{} grid {}-cell latitude.".format(self.name, cell.upper())
+            tmp.title = "{} grid {}-cell latitude.".format(
+                            self.model_grid.full_name, cell.upper())
             tmp[:] = y[:]
 
             try:
@@ -110,7 +111,8 @@ class OasisGrid(BaseGrid):
                 else:
                     raise e
             tmp.units = "degrees_east"
-            tmp.title = "{} grid {}-cell longitude.".format(self.name, cell.upper())
+            tmp.title = "{} grid {}-cell longitude.".format(
+                            self.model_grid.full_name, cell.upper())
             tmp[:] = x[:]
 
             try:
@@ -121,7 +123,8 @@ class OasisGrid(BaseGrid):
                 else:
                     raise e
             tmp.units = "degrees_north"
-            tmp.title = "{} grid {}-cell corner latitude".format(self.name, cell.upper())
+            tmp.title = "{} grid {}-cell corner latitude".format(
+                            self.model_grid.full_name, cell.upper())
             tmp[:] = clat[:]
 
             try:
@@ -132,7 +135,8 @@ class OasisGrid(BaseGrid):
                 else:
                     raise e
             tmp.units = "degrees_east"
-            tmp.title = "{} grid {}-cell corner longitude".format(self.name, cell.upper())
+            tmp.title = "{} grid {}-cell corner longitude".format(
+                            self.model_grid.full_name, cell.upper())
             tmp[:] = clon[:]
 
         f.close()
@@ -189,7 +193,8 @@ class OasisGrid(BaseGrid):
                 else:
                     raise e
             tmp.units = "m^2"
-            tmp.title = "{} grid {}-cell area.".format(self.name, cell.upper())
+            tmp.title = "{} grid {}-cell area.".format(
+                            self.model_grid.full_name, cell.upper())
             tmp[:] = area[:]
 
         f.close()
@@ -248,7 +253,8 @@ class OasisGrid(BaseGrid):
                 else:
                     raise e
             tmp.units = '0/1:o/l'
-            tmp.title = "{} grid {}-cell land-sea mask.".format(self.name, cell.upper())
+            tmp.title = "{} grid {}-cell land-sea mask.".format(
+                            self.model_grid.full_name, cell.upper())
             # OASIS uses 1 = masked, 0 = unmasked. This is the same as the
             # esmgrids convention
             tmp[:] = mask[:]

@@ -11,6 +11,7 @@ class MomGrid(BaseGrid):
 
     def __init__(self, **kwargs):
         self.type = 'Arakawa B'
+        self.full_name = 'MOM'
 
         super(MomGrid, self).__init__(**kwargs)
 

@@ -7,4 +7,5 @@ class Jra55Grid(RegularGrid):
 
     def __init__(self, description='JRA55 regular grid'):
         self.type = 'Arakawa A'
+        self.full_name = 'JRA55'
         super(Jra55Grid, self).__init__(360, 180, description=description)
