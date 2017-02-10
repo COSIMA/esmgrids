@@ -102,7 +102,7 @@ class BaseGrid(object):
         assert(abs(1 - np.sum(self.area_t) / EARTH_AREA) < 5e-4)
 
 
-    def write_scrip(self, filename, mask=None, write_test_scrip=True, history=''):
+    def write_scrip(self, filename, mask=None, history=''):
         """
         Write out grid in SCRIP format.
         """
@@ -160,10 +160,6 @@ class BaseGrid(object):
         f.title = self.description
         f.history = history
         f.close()
-
-        if write_test_scrip:
-            self.write_test_scrip(filename + '_test')
-
 
     def calc_area_of_polygons(self, clons, clats):
         """
