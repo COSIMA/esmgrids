@@ -10,7 +10,7 @@ class OasisGrid(BaseGrid):
         - grid cell area
         - grid cell masking
     """
-    def __init__(self, grid_name, model_grid, cells):
+    def __init__(self, grid_name, model_grid):
 
         # OASIS wants grid names to be 4 characters long and we to reserve one
         # character of the 't' or 'u'.
@@ -19,15 +19,12 @@ class OasisGrid(BaseGrid):
         self.name = grid_name
         self.grid_type = model_grid.type
 
-        if self.grid_type == 'Arakawa A':
-            cells = ('t')
-        elif self.grid_type == 'Arakawa B':
+        if self.grid_type == 'Arakawa B':
             self.cells = ('t', 'u')
         elif self.grid_type == 'Arakawa C':
             self.cells = ('t', 'u', 'v')
-        elif self.grid_type == 'Spectral':
-            cells = ('t')
         else:
+            self.cells = ('t')
 
         self.model_grid = model_grid
 
