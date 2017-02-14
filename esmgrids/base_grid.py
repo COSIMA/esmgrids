@@ -53,14 +53,11 @@ class BaseGrid(object):
             self.dy_t = np.tile(y_t, (dx_t.shape[0], 1))
             self.dy_t = self.dy_t.transpose()
         elif dx_t is None:
-            self.dx_t = np.zeros_like(self.x_t)
-            self.dy_t = np.zeros_like(self.y_t)
-
             # Repeat the first row/column using the values closest.
-            self.dx_t[:, 1:] = self.x_t[:, 1:] - self.x_t[:, :-1]
-            self.dx_t[:, 0] = self.x_t[:, 1] - self.x_t[:, 0]
-            self.dy_t[1:, :] = self.y_t[1:, :] - self.y_t[:-1, :]
-            self.dy_t[0, :] = self.y_t[1, :] - self.y_t[0, :]
+            self.dx_t = np.ndarray((self.x_t.shape[0], self.x_t.shape[1]-1))
+            self.dy_t = np.ndarray((self.x_t.shape[0]-1, self.x_t.shape[1]))
+            self.dx_t[:, :] = self.x_t[:, 1:] - self.x_t[:, :-1]
+            self.dy_t[:, :] = self.y_t[1:, :] - self.y_t[:-1, :]
         else:
             self.dx_t = dx_t
             self.dy_t = dy_t
@@ -229,18 +226,32 @@ def make_corners(x, y, dx, dy):
     # bottom left and go anti-clockwise. This is the SCRIP convention.
     clon = np.empty((4, nrow, ncol))
     clon[:] = np.NAN
-    clon[0,:,:] = x - dx_half
-    clon[1,:,:] = x + dx_half
-    clon[2,:,:] = x + dx_half
-    clon[3,:,:] = x - dx_half
+
+    clon[0,:,1:] = x[:,1:] - dx_half[:,:]
+    clon[0,:,0] = x[:,0] - dx_half[:,0]
+    clon[3,:,1:] = x[:,1:] - dx_half[:,:]
+    clon[3,:,0] = x[:,0] - dx_half[:,0]
+
+    clon[1,:,:-1] = x[:,:-1] + dx_half[:,:]
+    clon[1,:,-1] = x[:,-1] + dx_half[:,-1]
+    clon[2,:,:-1] = x[:,:-1] + dx_half[:,:]
+    clon[2,:,-1] = x[:,-1] + dx_half[:,-1]
+
     assert(not np.isnan(np.sum(clon)))
 
     clat = np.empty((4, nrow, ncol))
     clat[:] = np.NAN
-    clat[0,:,:] = y - dy_half
-    clat[1,:,:] = y - dy_half
-    clat[2,:,:] = y + dy_half
-    clat[3,:,:] = y + dy_half
+
+    clat[0,1:,:] = y[1:,:] - dy_half[:,:]
+    clat[0,0,:] = y[0,:] - dy_half[0,:]
+    clat[1,1:,:] = y[1:,:] - dy_half[:,:]
+    clat[1,0,:] = y[0,:] - dy_half[0,:]
+
+    clat[2,:-1,:] = y[:-1,:] + dy_half[:,:]
+    clat[2,-1,:] = y[-1,:] + dy_half[-1,:]
+    clat[3,:-1,:] = y[:-1,:] + dy_half[:,:]
+    clat[3,-1,:] = y[-1,:] + dy_half[-1,:]
+
     assert(not np.isnan(np.sum(clat)))
 
     # The bottom latitude band should always be Southern extent.

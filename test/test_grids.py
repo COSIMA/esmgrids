@@ -15,16 +15,52 @@ data_tarball_url = 'http://s3-ap-southeast-2.amazonaws.com/dp-drop/esmgrids/test
 
 EARTH_AREA = 510072000e6
 
+def check_for_gaps(corners, normalise_lons=False):
+    """
+    The top corners of one grid cell (3, 2) should be the bottom corners
+    (0, 1) of the grid cell above.
+
+    3---2 3---2
+    |   | |   |
+    0---1 0---1
+    3---2 3---2
+    |   | |   |
+    0---1 0---1
+    """
+
+    # 0 and 3 corners are the same on columns
+    assert (corners[0, 1:, :] == corners[3, 0:-1, :]).all()
+
+    # 1 and 2 corners are the same on columns.
+    assert (corners[1, 1:, :] == corners[2, 0:-1, :]).all()
+
+    # 0 and 1 corners are the same on rows
+    assert (corners[0, :, 1:] == corners[1, :, 0:-1]).all()
+
+    # 2 and 3 corners are the same on rows
+    assert (corners[3, :, 1:] == corners[2, :, 0:-1]).all()
+
+    # The columns wrap around.
+    n_corners = np.copy(corners)
+    if normalise_lons:
+        n_corners = (corners + 360) % 360
+
+    assert (n_corners[0, :, 0] == corners[1, :, -1]).all()
+    assert (n_corners[3, :, 0] == n_corners[2, :, -1]).all()
+
 def check_corners(grid):
     """
     Do some checks on the corners.
     """
 
-    # Check that no cell has two corners at the same location.
+    # Check that no single cell has two corners at the same location.
 
     # Check total area
     area_t = calc_area_of_polygons(grid.clon_t, grid.clat_t)
     assert(abs(1 - np.sum(area_t) / EARTH_AREA) < 5e-4)
+
+    check_for_gaps(grid.clon_t, normalise_lons=True)
+    check_for_gaps(grid.clat_t)
 
 
 class Test():
