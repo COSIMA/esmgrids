@@ -59,6 +59,7 @@ def check_corners(grid):
     area_t = calc_area_of_polygons(grid.clon_t, grid.clat_t)
     assert(abs(1 - np.sum(area_t) / EARTH_AREA) < 5e-4)
 
+    # Check for gaps between cells.
     check_for_gaps(grid.clon_t, normalise_lons=True)
     check_for_gaps(grid.clat_t)
 

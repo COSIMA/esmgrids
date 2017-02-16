@@ -82,8 +82,15 @@ class BaseGrid(object):
             self.clat_t, self.clon_t, _, _, _, _ = \
                 make_corners(self.x_t, self.y_t, self.dx_t, self.dy_t)
 
+        # The base class may implement this if it has a hole at the north
+        # pole to be fixed.
+        self.fix_pole_holes()
+
         if self.area_t is None:
             self.area_t = calc_area_of_polygons(self.clon_t, self.clat_t)
+
+    def fix_pole_holes(self):
+        pass
 
     @classmethod
     def fromgrid(cls, grid):
@@ -222,7 +229,7 @@ def make_corners(x, y, dx, dy):
     nrow = x.shape[0]
     ncol = x.shape[1]
 
-    # Set grid corners, we do these one corner at a time. Start at the 
+    # Set grid corners, we do these one corner at a time. Start at the
     # bottom left and go anti-clockwise. This is the SCRIP convention.
     clon = np.empty((4, nrow, ncol))
     clon[:] = np.NAN

@@ -1,10 +1,9 @@
 
 import numpy as np
-import warnings
+import pyproj
+from shapely.geometry import shape
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import mpl_toolkits.basemap as basemap
+proj_str = '+proj=laea +lat_0={} +lon_0={} +ellps=sphere'
 
 def calc_area_of_polygons(clons, clats):
     """
@@ -14,36 +13,23 @@ def calc_area_of_polygons(clons, clats):
     and then calculate the area of flat polygon.
     """
 
-    def area_polygon(p):
-        """
-        Calculate the area of a polygon.
-
-        Input is a polygon represented as a list of (x,y) vertex
-        coordinates, implicitly wrapping around from the last vertex to the
-        first.
-
-        See http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
-        """
-
-        def segments(v):
-            return zip(v, v[1:] + [v[0]])
-
-        return 0.5 * abs(sum(x0*y1 - x1*y0
-                             for ((x0, y0), (x1, y1)) in segments(p)))
-
-
     areas = np.zeros(clons.shape[1:])
     areas[:] = np.NAN
 
-    m = basemap.Basemap(projection='laea', resolution='h',
-                        llcrnrlon=0, llcrnrlat=-90.0,
-                        urcrnrlon=360, urcrnrlat=90.0, lat_0=-90, lon_0=0)
+    for j in range(areas.shape[0]):
+        for i in range(areas.shape[1]):
 
-    x, y = m(clons, clats)
+            lats = clats[:, j, i]
+            lons = clons[:, j, i]
 
-    for j in range(x.shape[1]):
-        for i in range(x.shape[2]):
-            areas[j, i] = area_polygon(list(zip(x[:, j, i], y[:, j, i])))
+            lat_centre = lats[0] + abs(lats[2] - lats[1]) / 2
+            lon_centre = lons[0] + abs(lons[1] - lons[0]) / 2
+
+            pa = pyproj.Proj(proj_str.format(lat_centre, lon_centre))
+            x, y = pa(lons, lats)
+
+            cop = {"type": "Polygon", "coordinates": [zip(x, y)]}
+            areas[j, i] = shape(cop).area
 
     assert(np.sum(areas) is not np.NAN)
     assert(np.min(areas) > 0)
