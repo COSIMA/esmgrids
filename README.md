@@ -2,7 +2,7 @@
 [![Code Health](https://landscape.io/github/DoublePrecision/esmgrids/master/landscape.svg?style=flat)](https://landscape.io/github/DoublePrecision/esmgrids/master)
 [![Build Status](https://travis-ci.org/DoublePrecision/esmgrids.svg?branch=master)](https://travis-ci.org/DoublePrecision/esmgrids)
 
-# esm-grids
+# esmgrids
 
 This package contains Python representations of Earth System Model grids. These are very useful, for example, for converting model grids between different formats.
 
@@ -14,8 +14,15 @@ Grids currently supported:
 - NEMO tri-polar
 - GODAS reanalysis
 - ORAS4 reanalysis
+- CICE tri-polar
 
-There is code but not tested/used:
+## To run the tests
 
-- CICE4.1 tri-polar
-- Unified Model
+```
+conda env create -n grids python3
+source activate grids
+python -m pytest
+```
+
+Warning: this will download a rather large tarball of test inputs.
+
