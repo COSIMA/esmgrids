@@ -94,8 +94,8 @@ class Test():
         hgrid = os.path.join(input_dir, 'ocean_01_hgrid.nc')
         mom = MomGrid.fromfile(hgrid, mask_file=mask)
         cice = CiceGrid.fromgrid(mom)
-        grid_file = os.path.join(output_dir, 'cice_grid.nc')
-        mask_file = os.path.join(output_dir, 'cice_mask.nc')
+        grid_file = os.path.join(output_dir, 'grid.nc')
+        mask_file = os.path.join(output_dir, 'kmt.nc')
         cice.write(grid_file, mask_file)
 
         # FIXME actually test that the CICE grid is good.

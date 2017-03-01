@@ -147,4 +147,5 @@ class CiceGrid(BaseGrid):
             f.createDimension('nx', self.num_lon_points)
             f.createDimension('ny', self.num_lat_points)
             mask = f.createVariable('kmt', 'f8', dimensions=('ny', 'nx'))
-            mask[:] = self.mask_t
+            # CICE uses 0 as masked, whereas internally we use 1 as masked.
+            mask[:] = (1 - self.mask_t)
