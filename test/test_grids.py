@@ -84,7 +84,7 @@ class Test():
 
         return os.path.join(self.test_data_dir, 'input')
 
-    @pytest.mark.cice
+    @pytest.mark.accessom
     def test_convert_mom_to_cice(self, input_dir, output_dir):
         """
         Read in a MOM grid and write out a cice grid at the same resolution.
