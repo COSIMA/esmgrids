@@ -56,10 +56,10 @@ class MomGrid(BaseGrid):
                 x_u = f.variables['x'][:-1:2,:-1:2]
                 y_u = f.variables['y'][:-1:2,:-1:2]
 
-                dx_t = f.variables['dx'][1::2,1::2]
-                dy_t = f.variables['dy'][1::2,1::2]
-                dx_u = f.variables['dx'][:-1:2,:-1:2]
-                dy_u = f.variables['dy'][:-1:2,:-1:2]
+                dx_t = f.variables['dx'][::2, ::2] + f.variables['dx'][::2, 1::2]
+                dy_t = f.variables['dy'][::2, ::2] + f.variables['dy'][1::2, ::2]
+                dx_u = f.variables['dx'][1::2, ::2] + f.variables['dx'][1::2, 1::2]
+                dy_u = f.variables['dy'][::2, 1::2] + f.variables['dy'][1::2, 1::2]
 
                 angle_t = f.variables['angle_dx'][1::2,1::2]
                 angle_u = f.variables['angle_dx'][2::2,0:-1:2]
