@@ -11,6 +11,8 @@ def calc_area_of_polygons(clons, clats):
 
     We project sphere onto a flat surface using an equal area projection
     and then calculate the area of flat polygon.
+
+    This is slow we should do some caching to avoid recomputing.
     """
 
     areas = np.zeros(clons.shape[1:])
