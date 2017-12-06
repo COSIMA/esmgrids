@@ -30,6 +30,6 @@ dependencies:
 - xz=5.2.2=1
 - zlib=1.2.8=3
 - pip:
-  - pep8
+  - pep8==1.7.1
 prefix: /home/nic/anaconda3/envs/grids
 
