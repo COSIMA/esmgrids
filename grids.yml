@@ -1,6 +1,7 @@
 name: grids
 channels:
 - defaults
+- conda-forge
 dependencies:
 - curl=7.49.0=1
 - geos=3.5.0=0
@@ -14,7 +15,6 @@ dependencies:
 - numba=0.30.1=np111py35_0
 - numpy=1.11.3=py35_0
 - openssl=1.0.2k=0
-- pep8
 - pip=9.0.1=py35_1
 - py=1.4.32=py35_0
 - pyproj=1.9.5.1=py35_0
@@ -29,5 +29,7 @@ dependencies:
 - wheel=0.29.0=py35_0
 - xz=5.2.2=1
 - zlib=1.2.8=3
+- pip:
+  - pep8
 prefix: /home/nic/anaconda3/envs/grids
 
