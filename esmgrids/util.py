@@ -5,6 +5,7 @@ from shapely.geometry import shape
 
 proj_str = '+proj=laea +lat_0={} +lon_0={} +ellps=sphere'
 
+
 def calc_area_of_polygons(clons, clats):
     """
     Calculate the area of lat-lon polygons.

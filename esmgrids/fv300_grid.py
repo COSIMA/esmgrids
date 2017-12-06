@@ -6,9 +6,11 @@ import numpy as np
 import netCDF4 as nc
 from .regular_grid import RegularGrid
 
+
 class FV300Grid(RegularGrid):
 
-    def __init__(self, num_lons=128, num_lats=64, num_levels=1, mask_file=None, description=''):
+    def __init__(self, num_lons=128, num_lats=64,
+                 num_levels=1, mask_file=None, description=''):
 
         levels = range(num_levels)
 
@@ -21,7 +23,7 @@ class FV300Grid(RegularGrid):
                     mask_t = np.round(f.variables['WGOCN'][0, 0, :, :-1])
                 except KeyError as e:
                     print("Error: var WGOCN not in {}.".format(mask_file),
-                           file=sys.stderr)
+                          file=sys.stderr)
                     raise e
         else:
             mask_t = np.ones((num_lats, num_lons))

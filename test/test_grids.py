@@ -2,18 +2,24 @@
 import pytest
 import sh
 import os
+import sys
 import numpy as np
 import netCDF4 as nc
 
-from esmgrids.mom_grid import MomGrid
-from esmgrids.core2_grid import Core2Grid
-from esmgrids.cice_grid import CiceGrid
-from esmgrids.util import calc_area_of_polygons
+my_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(my_dir, '../'))
+
+from esmgrids.mom_grid import MomGrid  # noqa
+from esmgrids.core2_grid import Core2Grid  # noqa
+from esmgrids.cice_grid import CiceGrid  # noqa
+from esmgrids.util import calc_area_of_polygons  # noqa
 
 data_tarball = 'test_data.tar.gz'
-data_tarball_url = 'http://s3-ap-southeast-2.amazonaws.com/dp-drop/esmgrids/test/test_data.tar.gz'
+data_tarball_url = ('http://s3-ap-southeast-2.amazonaws.com'
+                    '/dp-drop/esmgrids/test/test_data.tar.gz')
 
 EARTH_AREA = 510072000e6
+
 
 def check_for_gaps(corners, normalise_lons=False):
     """
@@ -47,6 +53,7 @@ def check_for_gaps(corners, normalise_lons=False):
 
     assert (n_corners[0, :, 0] == corners[1, :, -1]).all()
     assert (n_corners[3, :, 0] == n_corners[2, :, -1]).all()
+
 
 def check_corners(grid):
     """
@@ -109,7 +116,7 @@ class Test():
         core2 = Core2Grid(hgrid)
         area_t = check_corners(core2)
 
-        #mask = os.path.join(input_dir, 'ocean_01_mask.nc')
-        #hgrid = os.path.join(input_dir, 'ocean_01_hgrid.nc')
-        #mom = MomGrid.fromfile(hgrid, mask_file=mask)
-        #check_corners(mom)
+        # mask = os.path.join(input_dir, 'ocean_01_mask.nc')
+        # hgrid = os.path.join(input_dir, 'ocean_01_hgrid.nc')
+        # mom = MomGrid.fromfile(hgrid, mask_file=mask)
+        # check_corners(mom)

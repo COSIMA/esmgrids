@@ -4,6 +4,7 @@ import netCDF4 as nc
 
 from .base_grid import BaseGrid
 
+
 class CiceGrid(BaseGrid):
 
     def __init__(self, **kwargs):
@@ -52,7 +53,6 @@ class CiceGrid(BaseGrid):
                    area_t=area_t, area_u=area_u,
                    clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
                    mask_t=mask_t, description=description)
-
 
     def write(self, grid_filename, mask_filename):
         """
@@ -135,8 +135,8 @@ class CiceGrid(BaseGrid):
             clat_u[:] = np.deg2rad(self.clat_u)
 
         # Convert from m to cm.
-        htn[:] = self.dx_t[1:,:] * 100.
-        hte[:] = self.dy_t[:,1:] * 100.
+        htn[:] = self.dx_t[1:, :] * 100.
+        hte[:] = self.dy_t[:, 1:] * 100.
 
         angle[:] = np.deg2rad(self.angle_u[:])
         angleT[:] = np.deg2rad(self.angle_t[:])
