@@ -17,4 +17,6 @@ install:
   - conda env create -f grids.yml
   - source activate grids
 
-script: python -m pytest test/
+script: 
+  - python -m pytest --pep8 -m pep8
+  - python -m pytest test/
