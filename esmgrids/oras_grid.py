@@ -4,12 +4,13 @@ from __future__ import print_function
 
 import numpy as np
 import netCDF4 as nc
-import exceptions
 
-from base_grid import BaseGrid
+from .base_grid import BaseGrid
+
 
 def find_nearest_index(array, value):
     return (np.abs(array - value)).argmin()
+
 
 class OrasGrid(BaseGrid):
 
@@ -34,4 +35,4 @@ class OrasGrid(BaseGrid):
         super(OrasGrid, self).__init__(x_t, y_t, mask_t=mask, levels=zdescription)
 
     def make_corners(self):
-        raise exceptions.NotImplementedError
+        raise NotImplementedError

@@ -4,9 +4,11 @@ from __future__ import print_function
 import numpy as np
 from .base_grid import BaseGrid
 
-# Various regirdding techniques (e.g. SCRIP) don't cope well with singularities.
+# Various regirdding techniques (e.g. SCRIP) \
+# don't cope well with singularities.
 SOUTHERN_EXTENT = -89.9995
 NORTHERN_EXTENT = 89.9995
+
 
 class RegularGrid(BaseGrid):
 

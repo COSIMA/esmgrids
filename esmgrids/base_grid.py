@@ -4,17 +4,24 @@ import netCDF4 as nc
 
 from .util import calc_area_of_polygons
 
+
 class BaseGrid(object):
 
     def __init__(self, **kwargs):
 
-        x_t = kwargs.get('x_t', None); y_t = kwargs.get('y_t', None)
-        self.x_u = kwargs.get('x_u', None); self.y_u = kwargs.get('y_u', None)
-        self.x_v = kwargs.get('x_v', None); self.y_v = kwargs.get('y_v', None)
+        x_t = kwargs.get('x_t', None)
+        y_t = kwargs.get('y_t', None)
+        self.x_u = kwargs.get('x_u', None)
+        self.y_u = kwargs.get('y_u', None)
+        self.x_v = kwargs.get('x_v', None)
+        self.y_v = kwargs.get('y_v', None)
 
-        dx_t = kwargs.get('dx_t', None); dy_t = kwargs.get('dy_t', None)
-        self.dx_u = kwargs.get('dx_u', None); self.dy_u = kwargs.get('dy_u', None)
-        self.dx_v = kwargs.get('dx_v', None); self.dy_v = kwargs.get('dy_v', None)
+        dx_t = kwargs.get('dx_t', None)
+        dy_t = kwargs.get('dy_t', None)
+        self.dx_u = kwargs.get('dx_u', None)
+        self.dy_u = kwargs.get('dy_u', None)
+        self.dx_v = kwargs.get('dx_v', None)
+        self.dy_v = kwargs.get('dy_v', None)
 
         self.area_t = kwargs.get('area_t', None)
         self.area_u = kwargs.get('area_u', None)
@@ -69,8 +76,8 @@ class BaseGrid(object):
         if self.mask_t is None:
             # Default is all unmasked, up to user to mask.
             self.mask_t = np.zeros((self.num_levels,
-                                 self.num_lat_points, self.num_lon_points),
-                                 dtype='int')
+                                    self.num_lat_points, self.num_lon_points),
+                                   dtype='int')
         if self.mask_u is None:
             # FIXME
             self.mask_u = self.mask_t
@@ -100,7 +107,8 @@ class BaseGrid(object):
 
         return cls(**grid.__dict__)
 
-    def write_scrip(self, filename, mask=None, write_test_scrip=True, history=''):
+    def write_scrip(self, filename, mask=None,
+                    write_test_scrip=True, history=''):
         """
         Write out grid in SCRIP format.
         """
@@ -168,7 +176,6 @@ class BaseGrid(object):
         if write_test_scrip:
             self.write_test_scrip(filename + '_test')
 
-
     def write_test_scrip(self, filename):
         """
         Write out SCRIP grid contents in a format which is easier to read/test.
@@ -234,30 +241,30 @@ def make_corners(x, y, dx, dy):
     clon = np.empty((4, nrow, ncol))
     clon[:] = np.NAN
 
-    clon[0,:,1:] = x[:,1:] - dx_half[:,:]
-    clon[0,:,0] = x[:,0] - dx_half[:,0]
-    clon[3,:,1:] = x[:,1:] - dx_half[:,:]
-    clon[3,:,0] = x[:,0] - dx_half[:,0]
+    clon[0, :, 1:] = x[:, 1:] - dx_half[:, :]
+    clon[0, :, 0] = x[:, 0] - dx_half[:, 0]
+    clon[3, :, 1:] = x[:, 1:] - dx_half[:, :]
+    clon[3, :, 0] = x[:, 0] - dx_half[:, 0]
 
-    clon[1,:,:-1] = x[:,:-1] + dx_half[:,:]
-    clon[1,:,-1] = x[:,-1] + dx_half[:,-1]
-    clon[2,:,:-1] = x[:,:-1] + dx_half[:,:]
-    clon[2,:,-1] = x[:,-1] + dx_half[:,-1]
+    clon[1, :, :-1] = x[:, :-1] + dx_half[:, :]
+    clon[1, :, -1] = x[:, -1] + dx_half[:, -1]
+    clon[2, :, :-1] = x[:, :-1] + dx_half[:, :]
+    clon[2, :, -1] = x[:, -1] + dx_half[:, -1]
 
     assert(not np.isnan(np.sum(clon)))
 
     clat = np.empty((4, nrow, ncol))
     clat[:] = np.NAN
 
-    clat[0,1:,:] = y[1:,:] - dy_half[:,:]
-    clat[0,0,:] = y[0,:] - dy_half[0,:]
-    clat[1,1:,:] = y[1:,:] - dy_half[:,:]
-    clat[1,0,:] = y[0,:] - dy_half[0,:]
+    clat[0, 1:, :] = y[1:, :] - dy_half[:, :]
+    clat[0, 0, :] = y[0, :] - dy_half[0, :]
+    clat[1, 1:, :] = y[1:, :] - dy_half[:, :]
+    clat[1, 0, :] = y[0, :] - dy_half[0, :]
 
-    clat[2,:-1,:] = y[:-1,:] + dy_half[:,:]
-    clat[2,-1,:] = y[-1,:] + dy_half[-1,:]
-    clat[3,:-1,:] = y[:-1,:] + dy_half[:,:]
-    clat[3,-1,:] = y[-1,:] + dy_half[-1,:]
+    clat[2, :-1, :] = y[:-1, :] + dy_half[:, :]
+    clat[2, -1, :] = y[-1, :] + dy_half[-1, :]
+    clat[3, :-1, :] = y[:-1, :] + dy_half[:, :]
+    clat[3, -1, :] = y[-1, :] + dy_half[-1, :]
 
     assert(not np.isnan(np.sum(clat)))
 
@@ -270,4 +277,3 @@ def make_corners(x, y, dx, dy):
     assert(np.all(clat[3, -1, :] == np.max(y) + dy_half[-1, :]))
 
     return clat, clon, None, None, None, None
-

@@ -4,6 +4,7 @@ import netCDF4 as nc
 
 from .base_grid import BaseGrid
 
+
 class Jra55Grid(BaseGrid):
 
     def __init__(self, h_grid_def, description='JRA55 regular grid'):
@@ -14,16 +15,16 @@ class Jra55Grid(BaseGrid):
             x_t = f.variables['longitude'][:]
             y_t = f.variables['latitude'][:]
 
-        super(Jra55Grid, self).__init__(x_t=x_t, y_t=y_t, description=description)
+        super(Jra55Grid, self).__init__(x_t=x_t, y_t=y_t,
+                                        description=description)
 
     def fix_pole_holes(self):
 
         clat_copy = np.copy(self.clat_t)
 
-        self.clat_t[2, -1,:] = 90.0
-        self.clat_t[3, -1,:] = 90.0
+        self.clat_t[2, -1, :] = 90.0
+        self.clat_t[3, -1, :] = 90.0
 
         # Do South pole as well
-        self.clat_t[0, 0,:] = -90.0
-        self.clat_t[1, 0,:] = -90.0
-
+        self.clat_t[0, 0, :] = -90.0
+        self.clat_t[1, 0, :] = -90.0

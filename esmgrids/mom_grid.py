@@ -3,6 +3,7 @@ import netCDF4 as nc
 
 from .base_grid import BaseGrid
 
+
 class MomGrid(BaseGrid):
     """
     See src/mom5/ocean_core/ocean_grids.F90 and
@@ -49,20 +50,24 @@ class MomGrid(BaseGrid):
 
                 # Select points from double density horizontal grid.
                 # t-cells.
-                x_t = f.variables['x'][1::2,1::2]
-                y_t = f.variables['y'][1::2,1::2]
+                x_t = f.variables['x'][1::2, 1::2]
+                y_t = f.variables['y'][1::2, 1::2]
 
                 # u-cells.
-                x_u = f.variables['x'][:-1:2,:-1:2]
-                y_u = f.variables['y'][:-1:2,:-1:2]
+                x_u = f.variables['x'][:-1:2, :-1:2]
+                y_u = f.variables['y'][:-1:2, :-1:2]
 
-                dx_t = f.variables['dx'][::2, ::2] + f.variables['dx'][::2, 1::2]
-                dy_t = f.variables['dy'][::2, ::2] + f.variables['dy'][1::2, ::2]
-                dx_u = f.variables['dx'][1::2, ::2] + f.variables['dx'][1::2, 1::2]
-                dy_u = f.variables['dy'][::2, 1::2] + f.variables['dy'][1::2, 1::2]
+                dx_t = f.variables['dx'][::2, ::2] + \
+                    f.variables['dx'][::2, 1::2]
+                dy_t = f.variables['dy'][::2, ::2] + \
+                    f.variables['dy'][1::2, ::2]
+                dx_u = f.variables['dx'][1::2, ::2] + \
+                    f.variables['dx'][1::2, 1::2]
+                dy_u = f.variables['dy'][::2, 1::2] + \
+                    f.variables['dy'][1::2, 1::2]
 
-                angle_t = f.variables['angle_dx'][1::2,1::2]
-                angle_u = f.variables['angle_dx'][2::2,0:-1:2]
+                angle_t = f.variables['angle_dx'][1::2, 1::2]
+                angle_u = f.variables['angle_dx'][2::2, 0:-1:2]
 
                 area = f.variables['area'][:]
                 area_t = np.zeros((area.shape[0]//2, area.shape[1]//2))
@@ -70,17 +75,17 @@ class MomGrid(BaseGrid):
 
                 # Add up areas, going clockwise from bottom left.
                 area_t[:] = area[0::2, 0::2] + area[1::2, 0::2] + \
-                            area[1::2, 1::2] + area[0::2, 1::2]
+                    area[1::2, 1::2] + area[0::2, 1::2]
 
                 # These need to wrap around the globe. Copy ocn_area and
                 # add an extra column at the end.
                 area_ext = np.append(area[:], area[:, 0:1], axis=1)
                 area_u[:] = area_ext[0::2, 1::2] + area_ext[1::2, 1::2] + \
-                              area_ext[1::2, 2::2] + area_ext[0::2, 2::2]
+                    area_ext[1::2, 2::2] + area_ext[0::2, 2::2]
 
                 x = f.variables['x'][:]
                 y = f.variables['y'][:]
-                clat_t, clon_t, clat_u, clon_u, _, _ =  make_corners(x, y)
+                clat_t, clon_t, clat_u, clon_u, _, _ = make_corners(x, y)
 
         z = [0]
         if v_grid_def is not None:
@@ -133,18 +138,18 @@ def make_corners(x, y):
     # anti-clockwise.
     clon_t = np.empty((4, nrow, ncol))
     clon_t[:] = np.NAN
-    clon_t[0,:,:] = x[0:-1:2,0:-1:2]
-    clon_t[1,:,:] = x[0:-1:2,2::2]
-    clon_t[2,:,:] = x[2::2,2::2]
-    clon_t[3,:,:] = x[2::2,0:-1:2]
+    clon_t[0, :, :] = x[0:-1:2, 0:-1:2]
+    clon_t[1, :, :] = x[0:-1:2, 2::2]
+    clon_t[2, :, :] = x[2::2, 2::2]
+    clon_t[3, :, :] = x[2::2, 0:-1:2]
     assert(not np.isnan(np.sum(clon_t)))
 
     clat_t = np.empty((4, nrow, ncol))
     clat_t[:] = np.NAN
-    clat_t[0,:,:] = y[0:-1:2,0:-1:2]
-    clat_t[1,:,:] = y[0:-1:2,2::2]
-    clat_t[2,:,:] = y[2::2,2::2]
-    clat_t[3,:,:] = y[2::2,0:-1:2]
+    clat_t[0, :, :] = y[0:-1:2, 0:-1:2]
+    clat_t[1, :, :] = y[0:-1:2, 2::2]
+    clat_t[2, :, :] = y[2::2, 2::2]
+    clat_t[3, :, :] = y[2::2, 0:-1:2]
     assert(not np.isnan(np.sum(clat_t)))
 
     # Corners of u cells. Index 0 is bottom left and then
@@ -157,55 +162,54 @@ def make_corners(x, y):
 
     clon_u = np.empty((4, nrow, ncol))
     clon_u[:] = np.NAN
-    clon_u[0,1:,1:] = x[1:-2:2,1:-2:2]
-    clon_u[1,1:,1:] = x[1:-2:2,3::2]
-    clon_u[2,1:,1:] = x[3::2,3::2]
-    clon_u[3,1:,1:] = x[3::2,1:-2:2]
+    clon_u[0, 1:, 1:] = x[1:-2:2, 1:-2:2]
+    clon_u[1, 1:, 1:] = x[1:-2:2, 3::2]
+    clon_u[2, 1:, 1:] = x[3::2, 3::2]
+    clon_u[3, 1:, 1:] = x[3::2, 1:-2:2]
 
     # Fix up bottom row excluding left most column
-    clon_u[0,0,1:] = x[0,1:-2:2]
-    clon_u[1,0,1:] = x[0,3::2]
-    clon_u[2,0,1:] = x[1,3::2]
-    clon_u[3,0,1:] = x[1,1:-2:2]
+    clon_u[0, 0, 1:] = x[0, 1:-2:2]
+    clon_u[1, 0, 1:] = x[0, 3::2]
+    clon_u[2, 0, 1:] = x[1, 3::2]
+    clon_u[3, 0, 1:] = x[1, 1:-2:2]
 
     # Fix up leftmost column excluding bottom row
-    clon_u[0,1:,0] = x[1:-2:2,-1]
-    clon_u[1,1:,0] = x[1:-2:2,1]
-    clon_u[2,1:,0] = x[3::2,1]
-    clon_u[3,1:,0] = x[3::2,-1]
+    clon_u[0, 1:, 0] = x[1:-2:2, -1]
+    clon_u[1, 1:, 0] = x[1:-2:2, 1]
+    clon_u[2, 1:, 0] = x[3::2, 1]
+    clon_u[3, 1:, 0] = x[3::2, -1]
 
     # Fix up the bottom left corner point
-    clon_u[0, 0, 0] = x[0,-1]
-    clon_u[1, 0, 0] = x[0,1]
-    clon_u[2, 0, 0] = x[1,1]
-    clon_u[3, 0, 0] = x[1,-1]
+    clon_u[0, 0, 0] = x[0, -1]
+    clon_u[1, 0, 0] = x[0, 1]
+    clon_u[2, 0, 0] = x[1, 1]
+    clon_u[3, 0, 0] = x[1, -1]
     assert(not np.isnan(np.sum(clon_u)))
 
     clat_u = np.empty((4, nrow, ncol))
     clat_u[:] = np.NAN
-    clat_u[0,1:,1:] = y[1:-2:2,1:-2:2]
-    clat_u[1,1:,1:] = y[1:-2:2,3::2]
-    clat_u[2,1:,1:] = y[3::2,3::2]
-    clat_u[3,1:,1:] = y[3::2,1:-2:2]
+    clat_u[0, 1:, 1:] = y[1:-2:2, 1:-2:2]
+    clat_u[1, 1:, 1:] = y[1:-2:2, 3::2]
+    clat_u[2, 1:, 1:] = y[3::2, 3::2]
+    clat_u[3, 1:, 1:] = y[3::2, 1:-2:2]
 
     # Fix up bottom row excluding left most column
-    clat_u[0,0,1:] = y[0,1:-2:2]
-    clat_u[1,0,1:] = y[0,3::2]
-    clat_u[2,0,1:] = y[1,3::2]
-    clat_u[3,0,1:] = y[1,1:-2:2]
+    clat_u[0, 0, 1:] = y[0, 1:-2:2]
+    clat_u[1, 0, 1:] = y[0, 3::2]
+    clat_u[2, 0, 1:] = y[1, 3::2]
+    clat_u[3, 0, 1:] = y[1, 1:-2:2]
 
     # Fix up leftmost column excluding bottom row
-    clat_u[0,1:,0] = y[1:-2:2,-1]
-    clat_u[1,1:,0] = y[1:-2:2,1]
-    clat_u[2,1:,0] = y[3::2,1]
-    clat_u[3,1:,0] = y[3::2,-1]
+    clat_u[0, 1:, 0] = y[1:-2:2, -1]
+    clat_u[1, 1:, 0] = y[1:-2:2, 1]
+    clat_u[2, 1:, 0] = y[3::2, 1]
+    clat_u[3, 1:, 0] = y[3::2, -1]
 
     # Fix up the bottom left corner point
-    clat_u[0,0, 0] = y[0,-1]
-    clat_u[1,0, 0] = y[0,1]
-    clat_u[2,0, 0] = y[1,1]
-    clat_u[3,0, 0] = y[1,-1]
+    clat_u[0, 0,  0] = y[0, -1]
+    clat_u[1, 0,  0] = y[0, 1]
+    clat_u[2, 0,  0] = y[1, 1]
+    clat_u[3, 0,  0] = y[1, -1]
     assert(not np.isnan(np.sum(clat_u)))
 
     return clat_t, clon_t, clat_u, clon_u, None, None
-

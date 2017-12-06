@@ -3,6 +3,7 @@ import os
 import netCDF4 as nc
 from .base_grid import BaseGrid
 
+
 class OasisGrid(BaseGrid):
     """
     Python representation of OASIS grid including:
@@ -141,7 +142,6 @@ class OasisGrid(BaseGrid):
 
         f.close()
 
-
     def write_areas(self, areas_filename):
         """
         Make netcdf file areas.nc
@@ -198,7 +198,6 @@ class OasisGrid(BaseGrid):
             tmp[:] = area[:]
 
         f.close()
-
 
     def write_masks(self, masks_filename):
 
