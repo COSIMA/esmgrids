@@ -32,7 +32,8 @@ class OrasGrid(BaseGrid):
             mask = np.zeros_like(f.variables['tmask'], dtype=bool)
             mask[f.variables['tmask'][:] == 0.0] = True
 
-        super(OrasGrid, self).__init__(x_t, y_t, mask_t=mask, levels=zdescription)
+        super(OrasGrid, self).__init__(x_t, y_t, mask_t=mask,
+                                       levels=zdescription)
 
     def make_corners(self):
         raise NotImplementedError
