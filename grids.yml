@@ -14,7 +14,7 @@ dependencies:
 - numba=0.30.1=np111py35_0
 - numpy=1.11.3=py35_0
 - openssl=1.0.2k=0
-- pep8=1.7.1
+- pep8
 - pip=9.0.1=py35_1
 - py=1.4.32=py35_0
 - pyproj=1.9.5.1=py35_0
