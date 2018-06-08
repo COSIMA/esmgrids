@@ -44,6 +44,7 @@ class BaseGrid(object):
 
         self.z = kwargs.get('levels', [0])
         self.description = kwargs.get('description', '')
+        self.calc_areas = kwargs.get('calc_areas', True)
 
         if len(x_t.shape) == 1:
             # Tile x_t
@@ -93,7 +94,7 @@ class BaseGrid(object):
         # pole to be fixed.
         self.fix_pole_holes()
 
-        if self.area_t is None:
+        if self.area_t is None and self.calc_areas:
             self.area_t = calc_area_of_polygons(self.clon_t, self.clat_t)
 
     def fix_pole_holes(self):
