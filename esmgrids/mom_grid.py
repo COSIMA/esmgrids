@@ -48,26 +48,39 @@ class MomGrid(BaseGrid):
 
             else:
 
+                x = f.variables['x'][:]
+                y = f.variables['y'][:]
+
                 # Select points from double density horizontal grid.
-                # t-cells.
-                x_t = f.variables['x'][1::2, 1::2]
-                y_t = f.variables['y'][1::2, 1::2]
+                # t-cell centre points
+                x_t = x[1::2, 1::2]
+                y_t = y[1::2, 1::2]
 
-                # u-cells.
-                x_u = f.variables['x'][:-1:2, :-1:2]
-                y_u = f.variables['y'][:-1:2, :-1:2]
+                # u-cell centre points
+                x_u = x[2::2, 2::2]
+                y_u = y[2::2, 2::2]
 
-                dx_t = f.variables['dx'][::2, ::2] + \
-                    f.variables['dx'][::2, 1::2]
-                dy_t = f.variables['dy'][::2, ::2] + \
-                    f.variables['dy'][1::2, ::2]
-                dx_u = f.variables['dx'][1::2, ::2] + \
-                    f.variables['dx'][1::2, 1::2]
-                dy_u = f.variables['dy'][::2, 1::2] + \
-                    f.variables['dy'][1::2, 1::2]
+                dx = f.variables['dx'][:]
+                dy = f.variables['dy'][:]
+
+                # Through the centre of t cells
+                dx_t = dx[1::2, ::2] + dx[1::2, 1::2]
+                dy_t = dy[::2, 1::2] + dy[1::2, 1::2]
+
+                # Along the N and E edges of t cells
+                dx_tn = dx[2::2, ::2] + dx[2::2, 1::2]
+                dy_te = dy[::2, 2::2] + dy[1::2, 2::2]
+
+                # Through the centre of u cells
+                dx_u = dx[2::2, 1::2] + dx[2::2, 2::2]
+                dy_u = dy[1::2, 2::2] + dy[2::2, 2::2]
+
+                # Along the N and E edges of u cells
+                dx_un = dx[3::2, 1::2] + dx[3::2, 2::2]
+                dy_ue = dy[1::2, 3::2] + dy[2::2, 3::2]
 
                 angle_t = f.variables['angle_dx'][1::2, 1::2]
-                angle_u = f.variables['angle_dx'][2::2, 0:-1:2]
+                angle_u = f.variables['angle_dx'][2::2, :-1:2]
 
                 area = f.variables['area'][:]
                 area_t = np.zeros((area.shape[0]//2, area.shape[1]//2))
@@ -83,8 +96,6 @@ class MomGrid(BaseGrid):
                 area_u[:] = area_ext[0::2, 1::2] + area_ext[1::2, 1::2] + \
                     area_ext[1::2, 2::2] + area_ext[0::2, 2::2]
 
-                x = f.variables['x'][:]
-                y = f.variables['y'][:]
                 clat_t, clon_t, clat_u, clon_u, _, _ = make_corners(x, y)
 
         z = [0]

@@ -135,8 +135,8 @@ class CiceGrid(BaseGrid):
             clat_u[:] = np.deg2rad(self.clat_u)
 
         # Convert from m to cm.
-        htn[:] = self.dx_t[1:, :] * 100.
-        hte[:] = self.dy_t[:, 1:] * 100.
+        htn[:] = self.dx_tn[:] * 100.
+        hte[:] = self.dy_te[:] * 100.
 
         angle[:] = np.deg2rad(self.angle_u[:])
         angleT[:] = np.deg2rad(self.angle_t[:])
