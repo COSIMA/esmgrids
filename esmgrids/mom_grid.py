@@ -71,30 +71,41 @@ class MomGrid(BaseGrid):
                 dx_tn = dx[2::2, ::2] + dx[2::2, 1::2]
                 dy_te = dy[::2, 2::2] + dy[1::2, 2::2]
 
+                # These need to wrap around the globe in order to do dx_u
+                # add an extra column at the end.
+                dx_ext = np.append(dx[:], dx[:, 0:1], axis=1)
+
+                # The u-cells cross the tri-polar fold
+                dy_ext = np.append(dy[:], dy[-1:, :], axis=0)
+
                 # Through the centre of u cells
-                dx_u = dx[2::2, 1::2] + dx[2::2, 2::2]
-                dy_u = dy[1::2, 2::2] + dy[2::2, 2::2]
+                dx_u = dx_ext[2::2, 1::2] + dx_ext[2::2, 2::2]
+                dy_u = dy_ext[1::2, 2::2] + dy_ext[2::2, 2::2]
 
                 # Along the N and E edges of u cells
-                dx_un = dx[3::2, 1::2] + dx[3::2, 2::2]
-                dy_ue = dy[1::2, 3::2] + dy[2::2, 3::2]
+                dx_un = dx_ext[3::2, 1::2] + dx_ext[3::2, 2::2]
+                dy_ue = dy_ext[1::2, 3::2] + dy_ext[2::2, 3::2]
 
-                angle_t = f.variables['angle_dx'][1::2, 1::2]
-                angle_u = f.variables['angle_dx'][2::2, :-1:2]
+                angle_dx = f.variables['angle_dx'][:]
+                # The angle of rotation is a corner cell centres and applies to
+                # both t and u cells.
+                angle_t = angle_dx[2::2, 2::2]
+                angle_u = angle_dx[2::2, 2::2]
 
                 area = f.variables['area'][:]
-                area_t = np.zeros((area.shape[0]//2, area.shape[1]//2))
-                area_u = np.zeros((area.shape[0]//2, area.shape[1]//2))
 
                 # Add up areas, going clockwise from bottom left.
-                area_t[:] = area[0::2, 0::2] + area[1::2, 0::2] + \
+                area_t = area[0::2, 0::2] + area[1::2, 0::2] + \
                     area[1::2, 1::2] + area[0::2, 1::2]
 
                 # These need to wrap around the globe. Copy ocn_area and
-                # add an extra column at the end.
+                # add an extra column at the end. Also u-cells cross the
+                # tri-polar fold so add an extra row at the top.
                 area_ext = np.append(area[:], area[:, 0:1], axis=1)
-                area_u[:] = area_ext[0::2, 1::2] + area_ext[1::2, 1::2] + \
-                    area_ext[1::2, 2::2] + area_ext[0::2, 2::2]
+                area_ext = np.append(area_ext[:], area_ext[-1:, :], axis=0)
+
+                area_u = area_ext[1::2, 1::2] + area_ext[2::2, 1::2] + \
+                    area_ext[2::2, 2::2] + area_ext[1::2, 2::2]
 
                 clat_t, clon_t, clat_u, clon_u, _, _ = make_corners(x, y)
 
@@ -124,6 +135,7 @@ class MomGrid(BaseGrid):
 
         return cls(x_t=x_t, y_t=y_t, x_u=x_u, y_u=y_u,
                    dx_t=dx_t, dy_t=dy_t, dx_u=dx_u, dy_u=dy_u,
+                   dx_tn=dx_tn, dy_te=dy_te,
                    area_t=area_t, area_u=area_u,
                    clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
                    angle_t=angle_t, angle_u=angle_u,
