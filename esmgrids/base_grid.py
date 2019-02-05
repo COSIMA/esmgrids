@@ -18,8 +18,9 @@ class BaseGrid(object):
 
         dx_t = kwargs.get('dx_t', None)
         dy_t = kwargs.get('dy_t', None)
-        dx_tn = kwargs.get('dx_tn', None)
-        dy_te = kwargs.get('dy_te', None)
+
+        self.dx_tn = kwargs.get('dx_tn', None)
+        self.dy_te = kwargs.get('dy_te', None)
 
         self.dx_u = kwargs.get('dx_u', None)
         self.dy_u = kwargs.get('dy_u', None)

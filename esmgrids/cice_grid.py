@@ -27,8 +27,8 @@ class CiceGrid(BaseGrid):
             x_u = np.rad2deg(f.variables['ulat'][:])
             y_u = np.rad2deg(f.variables['ulon'][:])
 
-            dx_t = f.variables['htn'][:] * 100.0
-            dy_t = f.variables['hte'][:] * 100.0
+            dx_tn = f.variables['htn'][:] * 100.0
+            dy_te = f.variables['hte'][:] * 100.0
 
             area_t = f.variables['tarea'][:]
             area_u = f.variables['uarea'][:]
@@ -49,7 +49,8 @@ class CiceGrid(BaseGrid):
                 mask_t = f.variables['kmt'][:]
 
         return cls(x_t=x_t, y_t=y_t, x_u=x_u, y_u=y_u,
-                   dx_t=dx_t, dy_t=dy_t,
+                   dx_t=dx_tn, dy_t=dy_te,
+                   dx_tn=dx_tn, dy_te=dy_te,
                    area_t=area_t, area_u=area_u,
                    clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
                    mask_t=mask_t, description=description)

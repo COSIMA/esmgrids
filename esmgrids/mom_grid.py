@@ -18,6 +18,7 @@ class MomGrid(BaseGrid):
 
     @classmethod
     def fromfile(cls, h_grid_def, v_grid_def=None, mask_file=None,
+                 calc_areas=True,
                  description='MOM tripolar'):
         """
         Read in grid definition from file(s).
@@ -140,6 +141,7 @@ class MomGrid(BaseGrid):
                    clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
                    angle_t=angle_t, angle_u=angle_u,
                    mask_t=mask_t, mask_u=mask_u, levels=z,
+                   calc_areas=calc_areas,
                    description=description)
 
     def write(self, filename):
