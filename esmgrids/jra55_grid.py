@@ -12,8 +12,12 @@ class Jra55Grid(BaseGrid):
         self.full_name = 'JRA55'
 
         with nc.Dataset(h_grid_def) as f:
-            x_t = f.variables['longitude'][:]
-            y_t = f.variables['latitude'][:]
+            try:
+                x_t = f.variables['longitude'][:]
+                y_t = f.variables['latitude'][:]
+            except KeyError:
+                x_t = f.variables['lon'][:]
+                y_t = f.variables['lat'][:]
 
         super(Jra55Grid, self).__init__(x_t=x_t, y_t=y_t,
                                         description=description)

@@ -16,8 +16,13 @@ class Jra55RiverGrid(BaseGrid):
 
         try:
             with nc.Dataset(h_grid_def) as f:
-                x_t = f.variables['longitude'][:]
-                y_t = f.variables['latitude'][:]
+                try:
+                    x_t = f.variables['longitude'][:]
+                    y_t = f.variables['latitude'][:]
+                except KeyError:
+                    x_t = f.variables['lon'][:]
+                    y_t = f.variables['lat'][:]
+
         except IOError:
             print('Error opening {}'.format(h_grid_def), file=sys.stderr)
             sys.exit(1)
