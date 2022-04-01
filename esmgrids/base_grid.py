@@ -98,11 +98,20 @@ class BaseGrid(object):
         # pole to be fixed.
         self.fix_pole_holes()
 
+        # The base class may implement this if the corner latitudes overrun the
+        # poles
+        self.fix_pole_overruns()
+
         if self.area_t is None and self.calc_areas:
             self.area_t = calc_area_of_polygons(self.clon_t, self.clat_t)
 
     def fix_pole_holes(self):
         pass
+
+
+    def fix_pole_overruns(self):
+        pass
+
 
     @classmethod
     def fromgrid(cls, grid):

@@ -14,6 +14,8 @@ def calc_area_of_polygons(clons, clats):
     and then calculate the area of flat polygon.
 
     This is slow we should do some caching to avoid recomputing.
+
+    FIXME: compare against a Haversine method for speed and accuracy
     """
 
     areas = np.zeros(clons.shape[1:])
