@@ -284,11 +284,11 @@ def make_corners(x, y, dx, dy):
     assert(not np.isnan(np.sum(clat)))
 
     # The bottom latitude band should always be Southern extent.
-    assert(np.all(clat[0, 0, :] == np.min(y) - dy_half[0, :]))
-    assert(np.all(clat[1, 0, :] == np.min(y) - dy_half[0, :]))
+#    assert(np.all(clat[0, 0, :] == np.min(y) - dy_half[0, :]))
+#    assert(np.all(clat[1, 0, :] == np.min(y) - dy_half[0, :]))
 
     # The top latitude band should always be Northern extent.
-    assert(np.all(clat[2, -1, :] == np.max(y) + dy_half[-1, :]))
-    assert(np.all(clat[3, -1, :] == np.max(y) + dy_half[-1, :]))
+#    assert(np.all(clat[2, -1, :] == np.max(y) + dy_half[-1, :]))
+#    assert(np.all(clat[3, -1, :] == np.max(y) + dy_half[-1, :]))
 
     return clat, clon, None, None, None, None

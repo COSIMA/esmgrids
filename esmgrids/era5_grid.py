@@ -14,7 +14,7 @@ class Era5Grid(BaseGrid):
         with nc.Dataset(h_grid_def) as f:
             x_t = f.variables['longitude'][:]
             # ERA5 puts latitudes the wrong way around
-            y_t = np.flipud(f.variables['latitude'][:])
+            y_t = f.variables['latitude'][:]
 
         super(Era5Grid, self).__init__(x_t=x_t, y_t=y_t, calc_areas=False,
                                         description=description)
