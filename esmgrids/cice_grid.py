@@ -4,6 +4,22 @@ import netCDF4 as nc
 
 from .base_grid import BaseGrid
 
+from os import environ
+from datetime import datetime
+
+from .util import *
+
+def create_nc(filename):
+
+    f = nc.Dataset(filename, 'w')
+
+    f.timeGenerated = f"{datetime.now()}"
+    f.created_by = f"{environ.get('USER')}"
+    if is_git_repo():
+        git_url, _ , git_hash = git_info()
+        f.history = f"Created using commit {git_hash} of {git_url}"
+
+    return f 
 
 class CiceGrid(BaseGrid):
 
@@ -55,17 +71,24 @@ class CiceGrid(BaseGrid):
                    clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
                    mask_t=mask_t, description=description)
 
-    def write(self, grid_filename, mask_filename):
+    def create_gridnc(self, grid_filename):
+        self.grid_f = create_nc(grid_filename)
+        return True
+    
+    def create_masknc(self, mask_filename):
+        self.mask_f = create_nc(mask_filename)
+        return True
+    
+    def write(self):
         """
         Write out CICE grid to netcdf.
         """
 
-        f = nc.Dataset(grid_filename, 'w')
+        f = self.grid_f
 
         # Create dimensions.
         f.createDimension('nx', self.num_lon_points)
         f.createDimension('ny', self.num_lat_points)
-        f.createDimension('nc', 4)
 
         # Make all CICE grid variables.
         ulat = f.createVariable('ulat', 'f8', dimensions=('ny', 'nx'))
@@ -80,24 +103,6 @@ class CiceGrid(BaseGrid):
         tlon = f.createVariable('tlon', 'f8', dimensions=('ny', 'nx'))
         tlon.units = "radians"
         tlon.title = "Longitude of T points"
-
-        if self.clon_t is not None:
-            clon_t = f.createVariable('clon_t', 'f8',
-                                      dimensions=('nc', 'ny', 'nx'))
-            clon_t.units = "radians"
-            clon_t.title = "Longitude of T cell corners"
-            clat_t = f.createVariable('clat_t', 'f8',
-                                      dimensions=('nc', 'ny', 'nx'))
-            clat_t.units = "radians"
-            clat_t.title = "Latitude of T cell corners"
-            clon_u = f.createVariable('clon_u', 'f8',
-                                      dimensions=('nc', 'ny', 'nx'))
-            clon_u.units = "radians"
-            clon_u.title = "Longitude of U cell corners"
-            clat_u = f.createVariable('clat_u', 'f8',
-                                      dimensions=('nc', 'ny', 'nx'))
-            clat_u.units = "radians"
-            clat_u.title = "Latitude of U cell corners"
 
         htn = f.createVariable('htn', 'f8', dimensions=('ny', 'nx'))
         htn.units = "cm"
@@ -129,12 +134,6 @@ class CiceGrid(BaseGrid):
         ulat[:] = np.deg2rad(self.y_u)
         ulon[:] = np.deg2rad(self.x_u)
 
-        if self.clon_t is not None:
-            clon_t[:] = np.deg2rad(self.clon_t)
-            clat_t[:] = np.deg2rad(self.clat_t)
-            clon_u[:] = np.deg2rad(self.clon_u)
-            clat_u[:] = np.deg2rad(self.clat_u)
-
         # Convert from m to cm.
         htn[:] = self.dx_tn[:] * 100.
         hte[:] = self.dy_te[:] * 100.
@@ -144,9 +143,18 @@ class CiceGrid(BaseGrid):
 
         f.close()
 
-        with nc.Dataset(mask_filename, 'w') as f:
-            f.createDimension('nx', self.num_lon_points)
-            f.createDimension('ny', self.num_lat_points)
-            mask = f.createVariable('kmt', 'f8', dimensions=('ny', 'nx'))
-            # CICE uses 0 as masked, whereas internally we use 1 as masked.
-            mask[:] = (1 - self.mask_t)
+    def write_mask(self):
+
+        """
+        Write out CICE mask/kmt to netcdf.
+        """
+
+        f = self.mask_f
+        f.createDimension('nx', self.num_lon_points)
+        f.createDimension('ny', self.num_lat_points)
+        mask = f.createVariable('kmt', 'f8', dimensions=('ny', 'nx'))
+        # CICE uses 0 as masked, whereas internally we use 1 as masked.
+        mask[:] = (1 - self.mask_t)
+        f.close()
+
+
