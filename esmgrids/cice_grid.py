@@ -79,6 +79,13 @@ class CiceGrid(BaseGrid):
         self.mask_f = create_nc(mask_filename)
         return True
     
+    def create_2d_grid_var(self, name):
+        return self.grid_f.createVariable(
+            name, 'f8', dimensions=('ny', 'nx'),
+            compression='zlib', complevel=1
+        )
+
+
     def write(self):
         """
         Write out CICE grid to netcdf.
@@ -91,37 +98,37 @@ class CiceGrid(BaseGrid):
         f.createDimension('ny', self.num_lat_points)
 
         # Make all CICE grid variables.
-        ulat = f.createVariable('ulat', 'f8', dimensions=('ny', 'nx'))
+        ulat = self.create_2d_grid_var('ulat')
         ulat.units = "radians"
         ulat.title = "Latitude of U points"
-        ulon = f.createVariable('ulon', 'f8', dimensions=('ny', 'nx'))
+        ulon = self.create_2d_grid_var('ulon')
         ulon.units = "radians"
         ulon.title = "Longitude of U points"
-        tlat = f.createVariable('tlat', 'f8', dimensions=('ny', 'nx'))
+        tlat = self.create_2d_grid_var('tlat')
         tlat.units = "radians"
         tlat.title = "Latitude of T points"
-        tlon = f.createVariable('tlon', 'f8', dimensions=('ny', 'nx'))
+        tlon = self.create_2d_grid_var('tlon')
         tlon.units = "radians"
         tlon.title = "Longitude of T points"
 
-        htn = f.createVariable('htn', 'f8', dimensions=('ny', 'nx'))
+        htn = self.create_2d_grid_var('htn')
         htn.units = "cm"
         htn.title = "Width of T cells on North side."
-        hte = f.createVariable('hte', 'f8', dimensions=('ny', 'nx'))
+        hte = self.create_2d_grid_var('hte')
         hte.units = "cm"
         hte.title = "Width of T cells on East side."
 
-        angle = f.createVariable('angle', 'f8', dimensions=('ny', 'nx'))
+        angle = self.create_2d_grid_var('angle')
         angle.units = "radians"
         angle.title = "Rotation angle of U cells."
-        angleT = f.createVariable('angleT', 'f8', dimensions=('ny', 'nx'))
+        angleT = self.create_2d_grid_var('angleT')
         angleT.units = "radians"
         angleT.title = "Rotation angle of T cells."
 
-        area_t = f.createVariable('tarea', 'f8', dimensions=('ny', 'nx'))
+        area_t = self.create_2d_grid_var('tarea')
         area_t.units = "m^2"
         area_t.title = "Area of T cells."
-        area_u = f.createVariable('uarea', 'f8', dimensions=('ny', 'nx'))
+        area_u = self.create_2d_grid_var('uarea')
         area_u.units = "m^2"
         area_u.title = "Area of U cells."
 
@@ -152,7 +159,10 @@ class CiceGrid(BaseGrid):
         f = self.mask_f
         f.createDimension('nx', self.num_lon_points)
         f.createDimension('ny', self.num_lat_points)
-        mask = f.createVariable('kmt', 'f8', dimensions=('ny', 'nx'))
+        mask = f.createVariable(
+            'kmt', 'f8', dimensions=('ny', 'nx'),
+            compression='zlib', complevel=1
+        )
         # CICE uses 0 as masked, whereas internally we use 1 as masked.
         mask[:] = (1 - self.mask_t)
         f.close()
