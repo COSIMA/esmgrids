@@ -95,42 +95,63 @@ class CiceGrid(BaseGrid):
 
         # Create dimensions.
         f.createDimension('nx', self.num_lon_points)
+        #nx is the grid_longitude but doesn't have a value other than its index
         f.createDimension('ny', self.num_lat_points)
+        #ny is the grid_latitude but doesn't have a value other than its index
 
         # Make all CICE grid variables.
+        # names are based on https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
         ulat = self.create_2d_grid_var('ulat')
         ulat.units = "radians"
-        ulat.title = "Latitude of U points"
+        ulat.long_name = "Latitude of U points"
+        ulat.standard_name = "latitude"
         ulon = self.create_2d_grid_var('ulon')
         ulon.units = "radians"
-        ulon.title = "Longitude of U points"
+        ulon.long_name = "Longitude of U points"
+        ulon.standard_name = "longitude"
         tlat = self.create_2d_grid_var('tlat')
         tlat.units = "radians"
-        tlat.title = "Latitude of T points"
+        tlat.long_name = "Latitude of T points"
+        tlat.standard_name = "latitude"
         tlon = self.create_2d_grid_var('tlon')
         tlon.units = "radians"
-        tlon.title = "Longitude of T points"
+        tlon.long_name = "Longitude of T points"
+        tlon.standard_name = "longitude"
 
         htn = self.create_2d_grid_var('htn')
         htn.units = "cm"
-        htn.title = "Width of T cells on North side."
+        htn.long_name = "Width of T cells on North side."
+        htn.coordinates = "tlat tlon"
         hte = self.create_2d_grid_var('hte')
         hte.units = "cm"
-        hte.title = "Width of T cells on East side."
+        hte.long_name = "Width of T cells on East side."
+        hte.coordinates = "tlat tlon"
 
         angle = self.create_2d_grid_var('angle')
         angle.units = "radians"
-        angle.title = "Rotation angle of U cells."
+        angle.long_name = "Rotation angle of U cells."
+        angle.standard_name = "angle_of_rotation_from_east_to_x"
+        angle.coordinates = "ulat ulon"
         angleT = self.create_2d_grid_var('angleT')
         angleT.units = "radians"
-        angleT.title = "Rotation angle of T cells."
+        angleT.long_name = "Rotation angle of T cells."
+        angleT.standard_name = "angle_of_rotation_from_east_to_x"
+        angleT.coordinates = "tlat tlon"
 
         area_t = self.create_2d_grid_var('tarea')
         area_t.units = "m^2"
-        area_t.title = "Area of T cells."
+        area_t.long_name = "Area of T cells."
+        area_t.standard_name = "cell_area"
+        area_t.coordinates = "tlat tlon"
+        area_t.cell_measures = "area"
         area_u = self.create_2d_grid_var('uarea')
         area_u.units = "m^2"
-        area_u.title = "Area of U cells."
+        area_u.long_name = "Area of U cells."
+        area_u.standard_name = "cell_area"
+        area_u.coordinates = "ulat ulon"
+        area_u.cell_measures = "area"
+
+
 
         area_t[:] = self.area_t[:]
         area_u[:] = self.area_u[:]
