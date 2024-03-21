@@ -9,6 +9,7 @@ from datetime import datetime
 
 from .util import *
 
+
 def create_nc(filename):
 
     f = nc.Dataset(filename, 'w')
@@ -117,41 +118,44 @@ class CiceGrid(BaseGrid):
         tlon.units = "radians"
         tlon.long_name = "Longitude of T points"
         tlon.standard_name = "longitude"
-
+        
         htn = self.create_2d_grid_var('htn')
         htn.units = "cm"
         htn.long_name = "Width of T cells on North side."
         htn.coordinates = "tlat tlon"
+        htn.grid_mapping = "crs"
         hte = self.create_2d_grid_var('hte')
         hte.units = "cm"
         hte.long_name = "Width of T cells on East side."
         hte.coordinates = "tlat tlon"
-
+        hte.grid_mapping = "crs"
+        
         angle = self.create_2d_grid_var('angle')
         angle.units = "radians"
         angle.long_name = "Rotation angle of U cells."
         angle.standard_name = "angle_of_rotation_from_east_to_x"
         angle.coordinates = "ulat ulon"
+        angle.grid_mapping = "crs"
         angleT = self.create_2d_grid_var('angleT')
         angleT.units = "radians"
         angleT.long_name = "Rotation angle of T cells."
         angleT.standard_name = "angle_of_rotation_from_east_to_x"
         angleT.coordinates = "tlat tlon"
-
+        angleT.grid_mapping = "crs"
+        
         area_t = self.create_2d_grid_var('tarea')
         area_t.units = "m^2"
         area_t.long_name = "Area of T cells."
         area_t.standard_name = "cell_area"
         area_t.coordinates = "tlat tlon"
-        area_t.cell_measures = "area"
+        area_t.grid_mapping = "crs"
         area_u = self.create_2d_grid_var('uarea')
         area_u.units = "m^2"
         area_u.long_name = "Area of U cells."
         area_u.standard_name = "cell_area"
         area_u.coordinates = "ulat ulon"
-        area_u.cell_measures = "area"
-
-
+        area_u.grid_mapping = "crs"
+        
 
         area_t[:] = self.area_t[:]
         area_u[:] = self.area_u[:]
@@ -168,6 +172,13 @@ class CiceGrid(BaseGrid):
 
         angle[:] = np.deg2rad(self.angle_u[:])
         angleT[:] = np.deg2rad(self.angle_t[:])
+
+        #AS: based on https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch05s06.html
+        crs = f.createVariable('crs', 'S1')
+        crs.grid_mapping_name = "tripolar_latitude_longitude"
+        crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
+        f.Conventions = "CF-1.6"
+
 
         f.close()
 
@@ -187,5 +198,3 @@ class CiceGrid(BaseGrid):
         # CICE uses 0 as masked, whereas internally we use 1 as masked.
         mask[:] = (1 - self.mask_t)
         f.close()
-
-
