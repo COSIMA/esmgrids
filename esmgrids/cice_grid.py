@@ -81,9 +81,21 @@ class CiceGrid(BaseGrid):
         return True
     
     def create_2d_grid_var(self, name):
+        #set chunksizes based on OM2 config
+        #To-do: load these from a configuration file?
+        if (self.num_lon_points==360): #1deg
+            chunksizes=(150,180)
+        elif (self.num_lon_points==1440): #0.25deg
+            chunksizes=(540,720)
+        elif (self.num_lon_points==3600): #0.01deg
+            chunksizes=(270,360)
+        else :
+            chunksizes=None
+
         return self.grid_f.createVariable(
             name, 'f8', dimensions=('ny', 'nx'),
-            compression='zlib', complevel=1
+            compression='zlib', complevel=1,
+            chunksizes=chunksizes
         )
 
 
