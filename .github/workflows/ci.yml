@@ -21,7 +21,7 @@ jobs:
       uses: psf/black@stable
       with:
         options: "--check --verbose --diff"
-        src: "./om3utils ./tests"
+        src: "./esmgrids ./tests"
 
   build:
     needs: formatting
