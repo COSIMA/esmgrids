@@ -13,7 +13,18 @@ permissions:
   contents: read
 
 jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Code formatting
+      uses: psf/black@stable
+      with:
+        options: "--check --verbose --diff"
+        src: "./esmgrids ./test"
+
   build:
+    needs: formatting
     runs-on: ubuntu-latest
     strategy:
       matrix:
