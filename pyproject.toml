@@ -52,6 +52,7 @@ test = [
 [tool.pytest.ini_options]
 addopts = ["--cov=esmgrids", "--cov-report=term", "--cov-report=xml"]
 testpaths = ["test"]
+markers = ["broken"]
 
 [tool.coverage.run]
 omit = ["esmgrids/__init__.py", "esmgrids/_version.py"]
