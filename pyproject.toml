@@ -1,0 +1,48 @@
+[project]
+name = "esmgrids"
+description = "Python representations of Earth System Model grids"
+keywords = ["COSIMA", "access-om2",  "access-om3", "ocean modeling"]
+authors = [
+  {name = "COSIMA"},
+]
+dynamic = ["version"]
+dependencies = [
+    "xarray",
+    "numpy",
+    "netcdf4",
+    "ocean_model_grid_generator@git+https://github.com/nikizadehgfdl/ocean_model_grid_generator@790069b31f9791864ccd514a2b8f53f385a0452e",
+]
+
+[build-system]
+requires = ["setuptools", "setuptools_scm[toml]"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["esmgrids"]
+
+[tool.setuptools_scm]
+write_to = "esmgrids/_version.py"
+
+
+[project.optional-dependencies]
+devel = [
+    "flake8",
+    "black",
+]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--cov=om3utils", "--cov-report=term", "--cov-report=xml"]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["esmgrids/__init__.py", "esmgrids/_version.py"]
+
+[tool.black]
+line-length = 120
+
+[tool.flake8]
+max-line-length = 120
