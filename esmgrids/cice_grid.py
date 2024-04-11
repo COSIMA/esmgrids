@@ -3,6 +3,23 @@ import netCDF4 as nc
 
 from .base_grid import BaseGrid
 
+from os import environ
+from datetime import datetime
+
+from .util import *
+
+
+def create_nc(filename):
+
+    f = nc.Dataset(filename, 'w')
+
+    f.timeGenerated = f"{datetime.now()}"
+    f.created_by = f"{environ.get('USER')}"
+    if is_git_repo():
+        git_url, _ , git_hash = git_info()
+        f.history = f"Created using commit {git_hash} of {git_url}"
+
+    return f 
 
 class CiceGrid(BaseGrid):
 
@@ -65,66 +82,104 @@ class CiceGrid(BaseGrid):
             description=description,
         )
 
-    def write(self, grid_filename, mask_filename):
+    def create_gridnc(self, grid_filename):
+        self.grid_f = create_nc(grid_filename)
+        return True
+    
+    def create_masknc(self, mask_filename):
+        self.mask_f = create_nc(mask_filename)
+        return True
+    
+    def create_2d_grid_var(self, name):
+        #set chunksizes based on OM2 config
+        #To-do: load these from a configuration file?
+        if (self.num_lon_points==360): #1deg
+            chunksizes=(150,180)
+        elif (self.num_lon_points==1440): #0.25deg
+            chunksizes=(540,720)
+        elif (self.num_lon_points==3600): #0.01deg
+            chunksizes=(270,360)
+        else :
+            chunksizes=None
+
+        return self.grid_f.createVariable(
+            name, 'f8', dimensions=('ny', 'nx'),
+            compression='zlib', complevel=1,
+            chunksizes=chunksizes
+        )
+
+
+    def write(self):
         """
         Write out CICE grid to netcdf.
         """
 
-        f = nc.Dataset(grid_filename, "w")
+        f = self.grid_f
 
         # Create dimensions.
-        f.createDimension("nx", self.num_lon_points)
-        f.createDimension("ny", self.num_lat_points)
-        f.createDimension("nc", 4)
+        f.createDimension('nx', self.num_lon_points)
+        #nx is the grid_longitude but doesn't have a value other than its index
+        f.createDimension('ny', self.num_lat_points)
+        #ny is the grid_latitude but doesn't have a value other than its index
 
         # Make all CICE grid variables.
-        ulat = f.createVariable("ulat", "f8", dimensions=("ny", "nx"))
+        # names are based on https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
+        f.Conventions = "CF-1.6"
+        
+        ulat = self.create_2d_grid_var('ulat')
         ulat.units = "radians"
-        ulat.title = "Latitude of U points"
-        ulon = f.createVariable("ulon", "f8", dimensions=("ny", "nx"))
+        ulat.long_name = "Latitude of U points"
+        ulat.standard_name = "latitude"
+        ulon = self.create_2d_grid_var('ulon')
         ulon.units = "radians"
-        ulon.title = "Longitude of U points"
-        tlat = f.createVariable("tlat", "f8", dimensions=("ny", "nx"))
+        ulon.long_name = "Longitude of U points"
+        ulon.standard_name = "longitude"
+        tlat = self.create_2d_grid_var('tlat')
         tlat.units = "radians"
-        tlat.title = "Latitude of T points"
-        tlon = f.createVariable("tlon", "f8", dimensions=("ny", "nx"))
+        tlat.long_name = "Latitude of T points"
+        tlat.standard_name = "latitude"
+        tlon = self.create_2d_grid_var('tlon')
         tlon.units = "radians"
-        tlon.title = "Longitude of T points"
-
-        if self.clon_t is not None:
-            clon_t = f.createVariable("clon_t", "f8", dimensions=("nc", "ny", "nx"))
-            clon_t.units = "radians"
-            clon_t.title = "Longitude of T cell corners"
-            clat_t = f.createVariable("clat_t", "f8", dimensions=("nc", "ny", "nx"))
-            clat_t.units = "radians"
-            clat_t.title = "Latitude of T cell corners"
-            clon_u = f.createVariable("clon_u", "f8", dimensions=("nc", "ny", "nx"))
-            clon_u.units = "radians"
-            clon_u.title = "Longitude of U cell corners"
-            clat_u = f.createVariable("clat_u", "f8", dimensions=("nc", "ny", "nx"))
-            clat_u.units = "radians"
-            clat_u.title = "Latitude of U cell corners"
-
-        htn = f.createVariable("htn", "f8", dimensions=("ny", "nx"))
+        tlon.long_name = "Longitude of T points"
+        tlon.standard_name = "longitude"
+        
+        htn = self.create_2d_grid_var('htn')
         htn.units = "cm"
-        htn.title = "Width of T cells on North side."
-        hte = f.createVariable("hte", "f8", dimensions=("ny", "nx"))
+        htn.long_name = "Width of T cells on North side."
+        htn.coordinates = "ulat tlon"
+        htn.grid_mapping = "crs"
+        hte = self.create_2d_grid_var('hte')
         hte.units = "cm"
-        hte.title = "Width of T cells on East side."
-
-        angle = f.createVariable("angle", "f8", dimensions=("ny", "nx"))
+        hte.long_name = "Width of T cells on East side."
+        hte.coordinates = "tlat ulon"
+        hte.grid_mapping = "crs"
+        
+        angle = self.create_2d_grid_var('angle')
         angle.units = "radians"
-        angle.title = "Rotation angle of U cells."
-        angleT = f.createVariable("angleT", "f8", dimensions=("ny", "nx"))
+        angle.long_name = "Rotation angle of U cells."
+        angle.standard_name = "angle_of_rotation_from_east_to_x"
+        angle.coordinates = "ulat ulon"
+        angle.grid_mapping = "crs"
+        angleT = self.create_2d_grid_var('angleT')
         angleT.units = "radians"
-        angleT.title = "Rotation angle of T cells."
-
-        area_t = f.createVariable("tarea", "f8", dimensions=("ny", "nx"))
+        angleT.long_name = "Rotation angle of T cells."
+        angleT.standard_name = "angle_of_rotation_from_east_to_x"
+        angleT.coordinates = "tlat tlon"
+        angleT.grid_mapping = "crs"
+        
+        area_t = self.create_2d_grid_var('tarea')
         area_t.units = "m^2"
-        area_t.title = "Area of T cells."
-        area_u = f.createVariable("uarea", "f8", dimensions=("ny", "nx"))
+        area_t.long_name = "Area of T cells."
+        area_t.standard_name = "cell_area"
+        area_t.coordinates = "tlat tlon"
+        area_t.grid_mapping = "crs"
+        area_u = self.create_2d_grid_var('uarea')
         area_u.units = "m^2"
-        area_u.title = "Area of U cells."
+        area_u.long_name = "Area of U cells."
+        area_u.standard_name = "cell_area"
+        area_u.coordinates = "ulat ulon"
+        area_u.grid_mapping = "crs"
+        
 
         area_t[:] = self.area_t[:]
         area_u[:] = self.area_u[:]
@@ -135,12 +190,6 @@ class CiceGrid(BaseGrid):
         ulat[:] = np.deg2rad(self.y_u)
         ulon[:] = np.deg2rad(self.x_u)
 
-        if self.clon_t is not None:
-            clon_t[:] = np.deg2rad(self.clon_t)
-            clat_t[:] = np.deg2rad(self.clat_t)
-            clon_u[:] = np.deg2rad(self.clon_u)
-            clat_u[:] = np.deg2rad(self.clat_u)
-
         # Convert from m to cm.
         htn[:] = self.dx_tn[:] * 100.0
         hte[:] = self.dy_te[:] * 100.0
@@ -150,9 +199,23 @@ class CiceGrid(BaseGrid):
 
         f.close()
 
-        with nc.Dataset(mask_filename, "w") as f:
-            f.createDimension("nx", self.num_lon_points)
-            f.createDimension("ny", self.num_lat_points)
-            mask = f.createVariable("kmt", "f8", dimensions=("ny", "nx"))
-            # CICE uses 0 as masked, whereas internally we use 1 as masked.
-            mask[:] = 1 - self.mask_t
+    def write_mask(self):
+
+        """
+        Write out CICE mask/kmt to netcdf.
+        """
+
+        f = self.mask_f
+        f.createDimension('nx', self.num_lon_points)
+        f.createDimension('ny', self.num_lat_points)
+        mask = f.createVariable(
+            'kmt', 'f8', dimensions=('ny', 'nx'),
+            compression='zlib', complevel=1
+        )
+        
+        mask.grid_mapping = "crs"
+        mask.standard_name = "sea_binary_mask"
+        
+        # CICE uses 0 as masked, whereas internally we use 1 as masked.
+        mask[:] = (1 - self.mask_t)
+        f.close()

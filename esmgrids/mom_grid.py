@@ -85,10 +85,9 @@ class MomGrid(BaseGrid):
                 dx_un = dx_ext[3::2, 1::2] + dx_ext[3::2, 2::2]
                 dy_ue = dy_ext[1::2, 3::2] + dy_ext[2::2, 3::2]
 
-                angle_dx = f.variables["angle_dx"][:]
-                # The angle of rotation is a corner cell centres and applies to
-                # both t and u cells.
-                angle_t = angle_dx[2::2, 2::2]
+                angle_dx = f.variables['angle_dx'][:]
+                
+                angle_t = angle_dx[1::2, 1::2]
                 angle_u = angle_dx[2::2, 2::2]
 
                 area = f.variables["area"][:]
