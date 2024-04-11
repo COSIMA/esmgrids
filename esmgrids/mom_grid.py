@@ -11,46 +11,44 @@ class MomGrid(BaseGrid):
     """
 
     def __init__(self, **kwargs):
-        self.type = 'Arakawa B'
-        self.full_name = 'MOM'
+        self.type = "Arakawa B"
+        self.full_name = "MOM"
 
         super(MomGrid, self).__init__(**kwargs)
 
     @classmethod
-    def fromfile(cls, h_grid_def, v_grid_def=None, mask_file=None,
-                 calc_areas=True,
-                 description='MOM tripolar'):
+    def fromfile(cls, h_grid_def, v_grid_def=None, mask_file=None, calc_areas=True, description="MOM tripolar"):
         """
         Read in grid definition from file(s).
         """
 
         with nc.Dataset(h_grid_def) as f:
 
-            if 'x_T' in f.variables:
+            if "x_T" in f.variables:
                 # This is an old style horizontal grid definition.
                 # t-cells.
-                x_t = f.variables['x_T'][:]
-                y_t = f.variables['y_T'][:]
+                x_t = f.variables["x_T"][:]
+                y_t = f.variables["y_T"][:]
 
                 # u-cells.
-                x_u = f.variables['x_C'][:]
-                y_u = f.variables['y_C'][:]
+                x_u = f.variables["x_C"][:]
+                y_u = f.variables["y_C"][:]
 
-                area_t = f.variables['area_T'][:]
-                area_u = f.variables['area_C'][:]
+                area_t = f.variables["area_T"][:]
+                area_u = f.variables["area_C"][:]
 
-                clon_t = f.variables['x_vert_T'][:]
-                clat_t = f.variables['y_vert_T'][:]
-                clon_u = f.variables['x_vert_C'][:]
-                clat_u = f.variables['y_vert_C'][:]
+                clon_t = f.variables["x_vert_T"][:]
+                clat_t = f.variables["y_vert_T"][:]
+                clon_u = f.variables["x_vert_C"][:]
+                clat_u = f.variables["y_vert_C"][:]
 
                 dx_t = dy_t = dx_u = dy_u = None
                 angle_t = angle_u = None
 
             else:
 
-                x = f.variables['x'][:]
-                y = f.variables['y'][:]
+                x = f.variables["x"][:]
+                y = f.variables["y"][:]
 
                 # Select points from double density horizontal grid.
                 # t-cell centre points
@@ -61,8 +59,8 @@ class MomGrid(BaseGrid):
                 x_u = x[2::2, 2::2]
                 y_u = y[2::2, 2::2]
 
-                dx = f.variables['dx'][:]
-                dy = f.variables['dy'][:]
+                dx = f.variables["dx"][:]
+                dy = f.variables["dy"][:]
 
                 # Through the centre of t cells
                 dx_t = dx[1::2, ::2] + dx[1::2, 1::2]
@@ -87,17 +85,16 @@ class MomGrid(BaseGrid):
                 dx_un = dx_ext[3::2, 1::2] + dx_ext[3::2, 2::2]
                 dy_ue = dy_ext[1::2, 3::2] + dy_ext[2::2, 3::2]
 
-                angle_dx = f.variables['angle_dx'][:]
+                angle_dx = f.variables["angle_dx"][:]
                 # The angle of rotation is a corner cell centres and applies to
                 # both t and u cells.
                 angle_t = angle_dx[2::2, 2::2]
                 angle_u = angle_dx[2::2, 2::2]
 
-                area = f.variables['area'][:]
+                area = f.variables["area"][:]
 
                 # Add up areas, going clockwise from bottom left.
-                area_t = area[0::2, 0::2] + area[1::2, 0::2] + \
-                    area[1::2, 1::2] + area[0::2, 1::2]
+                area_t = area[0::2, 0::2] + area[1::2, 0::2] + area[1::2, 1::2] + area[0::2, 1::2]
 
                 # These need to wrap around the globe. Copy ocn_area and
                 # add an extra column at the end. Also u-cells cross the
@@ -105,8 +102,7 @@ class MomGrid(BaseGrid):
                 area_ext = np.append(area[:], area[:, 0:1], axis=1)
                 area_ext = np.append(area_ext[:], area_ext[-1:, :], axis=0)
 
-                area_u = area_ext[1::2, 1::2] + area_ext[2::2, 1::2] + \
-                    area_ext[2::2, 2::2] + area_ext[1::2, 2::2]
+                area_u = area_ext[1::2, 1::2] + area_ext[2::2, 1::2] + area_ext[2::2, 2::2] + area_ext[1::2, 2::2]
 
                 clat_t, clon_t, clat_u, clon_u, _, _ = make_corners(x, y)
 
@@ -114,19 +110,19 @@ class MomGrid(BaseGrid):
         if v_grid_def is not None:
             with nc.Dataset(v_grid_def) as f:
                 # Only take cell centres.
-                z = f.variables['zeta'][1::2]
+                z = f.variables["zeta"][1::2]
 
         if mask_file is not None:
             with nc.Dataset(mask_file) as f:
                 # MOM default is 0 masked, 1 not masked.
                 # Internal representation is True for masked, False
                 # not masked.
-                if 'wet' in f.variables:
-                    mask = np.ones_like(f.variables['wet'], dtype=bool)
-                    mask[f.variables['wet'][:] >= 0.5] = False
+                if "wet" in f.variables:
+                    mask = np.ones_like(f.variables["wet"], dtype=bool)
+                    mask[f.variables["wet"][:] >= 0.5] = False
                 else:
-                    mask = np.ones_like(f.variables['mask'], dtype=bool)
-                    mask[f.variables['mask'][:] >= 0.5] = False
+                    mask = np.ones_like(f.variables["mask"], dtype=bool)
+                    mask[f.variables["mask"][:] >= 0.5] = False
                 mask_t = mask
                 # FIXME: this is not correct.
                 mask_u = mask
@@ -134,15 +130,31 @@ class MomGrid(BaseGrid):
             mask_t = None
             mask_u = None
 
-        return cls(x_t=x_t, y_t=y_t, x_u=x_u, y_u=y_u,
-                   dx_t=dx_t, dy_t=dy_t, dx_u=dx_u, dy_u=dy_u,
-                   dx_tn=dx_tn, dy_te=dy_te,
-                   area_t=area_t, area_u=area_u,
-                   clat_t=clat_t, clon_t=clon_t, clat_u=clat_u, clon_u=clon_u,
-                   angle_t=angle_t, angle_u=angle_u,
-                   mask_t=mask_t, mask_u=mask_u, levels=z,
-                   calc_areas=calc_areas,
-                   description=description)
+        return cls(
+            x_t=x_t,
+            y_t=y_t,
+            x_u=x_u,
+            y_u=y_u,
+            dx_t=dx_t,
+            dy_t=dy_t,
+            dx_u=dx_u,
+            dy_u=dy_u,
+            dx_tn=dx_tn,
+            dy_te=dy_te,
+            area_t=area_t,
+            area_u=area_u,
+            clat_t=clat_t,
+            clon_t=clon_t,
+            clat_u=clat_u,
+            clon_u=clon_u,
+            angle_t=angle_t,
+            angle_u=angle_u,
+            mask_t=mask_t,
+            mask_u=mask_u,
+            levels=z,
+            calc_areas=calc_areas,
+            description=description,
+        )
 
     def write(self, filename):
         """
@@ -167,7 +179,7 @@ def make_corners(x, y):
     clon_t[1, :, :] = x[0:-1:2, 2::2]
     clon_t[2, :, :] = x[2::2, 2::2]
     clon_t[3, :, :] = x[2::2, 0:-1:2]
-    assert(not np.isnan(np.sum(clon_t)))
+    assert not np.isnan(np.sum(clon_t))
 
     clat_t = np.empty((4, nrow, ncol))
     clat_t[:] = np.NAN
@@ -175,7 +187,7 @@ def make_corners(x, y):
     clat_t[1, :, :] = y[0:-1:2, 2::2]
     clat_t[2, :, :] = y[2::2, 2::2]
     clat_t[3, :, :] = y[2::2, 0:-1:2]
-    assert(not np.isnan(np.sum(clat_t)))
+    assert not np.isnan(np.sum(clat_t))
 
     # Corners of u cells. Index 0 is bottom left and then
     # anti-clockwise.
@@ -209,7 +221,7 @@ def make_corners(x, y):
     clon_u[1, 0, 0] = x[0, 1]
     clon_u[2, 0, 0] = x[1, 1]
     clon_u[3, 0, 0] = x[1, -1]
-    assert(not np.isnan(np.sum(clon_u)))
+    assert not np.isnan(np.sum(clon_u))
 
     clat_u = np.empty((4, nrow, ncol))
     clat_u[:] = np.NAN
@@ -231,10 +243,10 @@ def make_corners(x, y):
     clat_u[3, 1:, 0] = y[3::2, -1]
 
     # Fix up the bottom left corner point
-    clat_u[0, 0,  0] = y[0, -1]
-    clat_u[1, 0,  0] = y[0, 1]
-    clat_u[2, 0,  0] = y[1, 1]
-    clat_u[3, 0,  0] = y[1, -1]
-    assert(not np.isnan(np.sum(clat_u)))
+    clat_u[0, 0, 0] = y[0, -1]
+    clat_u[1, 0, 0] = y[0, 1]
+    clat_u[2, 0, 0] = y[1, 1]
+    clat_u[3, 0, 0] = y[1, -1]
+    assert not np.isnan(np.sum(clat_u))
 
     return clat_t, clon_t, clat_u, clon_u, None, None
