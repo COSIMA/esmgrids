@@ -1,9 +1,8 @@
-
 import numpy as np
 import pyproj
 from shapely.geometry import shape
 
-proj_str = '+proj=laea +lat_0={} +lon_0={} +ellps=sphere'
+proj_str = "+proj=laea +lat_0={} +lon_0={} +ellps=sphere"
 
 
 def calc_area_of_polygons(clons, clats):
@@ -36,7 +35,7 @@ def calc_area_of_polygons(clons, clats):
             cop = {"type": "Polygon", "coordinates": [zip(x, y)]}
             areas[j, i] = shape(cop).area
 
-    assert(np.sum(areas) is not np.NAN)
-    assert(np.min(areas) > 0)
+    assert np.sum(areas) is not np.NAN
+    assert np.min(areas) > 0
 
     return areas
