@@ -13,34 +13,30 @@ class TripolarGrid(BaseGrid):
     tripolar grid is used.
     """
 
-    def __init__(self, tripolar_grid, levels, description=''):
+    def __init__(self, tripolar_grid, levels, description=""):
 
         # We may need to extend the input grid Southward.
         if np.min(tripolar_grid.y_t[:]) > -82:
 
             dy = tripolar_grid.y_t[1, 0] - tripolar_grid.y_t[0, 0]
-            new_rows = int(np.rint((abs(-82 - np.min(tripolar_grid.y_t)
-                                        ) / dy)))
+            new_rows = int(np.rint((abs(-82 - np.min(tripolar_grid.y_t)) / dy)))
 
-            x_t = np.zeros((tripolar_grid.x_t.shape[0] +
-                            new_rows, tripolar_grid.x_t.shape[1]))
-            y_t = np.zeros((tripolar_grid.x_t.shape[0] +
-                            new_rows, tripolar_grid.x_t.shape[1]))
+            x_t = np.zeros((tripolar_grid.x_t.shape[0] + new_rows, tripolar_grid.x_t.shape[1]))
+            y_t = np.zeros((tripolar_grid.x_t.shape[0] + new_rows, tripolar_grid.x_t.shape[1]))
 
             x_t[new_rows:, :] = tripolar_grid.x_t[:]
-            x_t[:new_rows, :] = np.stack([tripolar_grid.x_t[0, :]]*new_rows)
+            x_t[:new_rows, :] = np.stack([tripolar_grid.x_t[0, :]] * new_rows)
 
             y_t[new_rows:, :] = tripolar_grid.y_t[:]
-            for n in range(new_rows-1, -1, -1):
-                y_t[n, :] = y_t[n+1, :] - dy
+            for n in range(new_rows - 1, -1, -1):
+                y_t[n, :] = y_t[n + 1, :] - dy
 
             tripolar_mask = np.zeros_like(tripolar_grid.mask, dtype=bool)
             tripolar_mask[tripolar_grid.mask[:] == 0.0] = True
             assert len(tripolar_mask.shape) == 3
 
             # Drop the mask in, with new rows being masked by default.
-            mask = np.ndarray((levels.shape[0], y_t.shape[0],
-                               y_t.shape[1]), dtype=bool)
+            mask = np.ndarray((levels.shape[0], y_t.shape[0], y_t.shape[1]), dtype=bool)
             mask[:] = True
             diff = abs(mask.shape[0] - tripolar_grid.mask.shape[0])
             if mask.shape[0] > tripolar_mask.shape[0]:
@@ -52,9 +48,7 @@ class TripolarGrid(BaseGrid):
             y_t = tripolar_grid.x_y[:]
             mask = tripolar_grid.mask[:]
 
-        super(TripolarGrid, self).__init__(x_t, y_t, mask_t=mask,
-                                           levels=levels,
-                                           description=description)
+        super(TripolarGrid, self).__init__(x_t, y_t, mask_t=mask, levels=levels, description=description)
 
     def make_corners(self):
 
@@ -82,7 +76,7 @@ class TripolarGrid(BaseGrid):
         clon[:, :, 1] = x + dx_half
         clon[:, :, 2] = x + dx_half
         clon[:, :, 3] = x - dx_half
-        assert(not np.isnan(np.sum(clon)))
+        assert not np.isnan(np.sum(clon))
 
         clat = np.empty((self.num_lat_points, self.num_lon_points, 4))
         clat[:] = np.NAN
@@ -90,7 +84,7 @@ class TripolarGrid(BaseGrid):
         clat[:, :, 1] = y - dy_half
         clat[:, :, 2] = y + dy_half
         clat[:, :, 3] = y + dy_half
-        assert(not np.isnan(np.sum(clat)))
+        assert not np.isnan(np.sum(clat))
 
         self.clon_t = clon
         self.clat_t = clat

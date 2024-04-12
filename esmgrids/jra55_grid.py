@@ -1,4 +1,3 @@
-
 import numpy as np
 import netCDF4 as nc
 
@@ -7,20 +6,19 @@ from .base_grid import BaseGrid
 
 class Jra55Grid(BaseGrid):
 
-    def __init__(self, h_grid_def, description='JRA55 regular grid'):
-        self.type = 'Arakawa A'
-        self.full_name = 'JRA55'
+    def __init__(self, h_grid_def, description="JRA55 regular grid"):
+        self.type = "Arakawa A"
+        self.full_name = "JRA55"
 
         with nc.Dataset(h_grid_def) as f:
             try:
-                x_t = f.variables['longitude'][:]
-                y_t = f.variables['latitude'][:]
+                x_t = f.variables["longitude"][:]
+                y_t = f.variables["latitude"][:]
             except KeyError:
-                x_t = f.variables['lon'][:]
-                y_t = f.variables['lat'][:]
+                x_t = f.variables["lon"][:]
+                y_t = f.variables["lat"][:]
 
-        super(Jra55Grid, self).__init__(x_t=x_t, y_t=y_t,
-                                        description=description)
+        super(Jra55Grid, self).__init__(x_t=x_t, y_t=y_t, description=description)
 
     def fix_pole_holes(self):
 
