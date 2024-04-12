@@ -1,7 +1,7 @@
 import numpy as np
 import netCDF4 as nc
 
-from .util import calc_area_of_polygons
+from esmgrids.util import calc_area_of_polygons
 
 
 class BaseGrid(object):
@@ -49,7 +49,7 @@ class BaseGrid(object):
         self.description = kwargs.get("description", "")
         self.calc_areas = kwargs.get("calc_areas", True)
 
-        if len(x_t.shape) == 1:
+        if x_t is not None and len(x_t.shape) == 1:
             # Tile x_t
             self.x_t = np.tile(x_t, (y_t.shape[0], 1))
             self.y_t = np.tile(y_t, (x_t.shape[0], 1))
