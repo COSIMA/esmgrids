@@ -1,6 +1,3 @@
-
-[![Code Health](https://landscape.io/github/DoublePrecision/esmgrids/master/landscape.svg?style=flat)](https://landscape.io/github/DoublePrecision/esmgrids/master)
-
 ![Code Health](https://github.com/COSIMA/esmgrids/actions/workflows/ci.yml/badge.svg)
 
 # esmgrids

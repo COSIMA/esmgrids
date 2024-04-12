@@ -11,9 +11,7 @@ class CiceGrid(BaseGrid):
     def __init__(self, **kwargs):
         self.type = "Arakawa B"
         self.full_name = "CICE"
-        # self.grid_file = grid_file
-        # self.mask_file = mask_file
-
+        
         super(CiceGrid, self).__init__(**kwargs)
 
     @classmethod
@@ -244,16 +242,6 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    # command line arguments
-    # import os, sys
-    # sys.path.append(os.path.dirname(__file__))
-
-    # print(os.path.dirname(__file__))
-
-    # from base_grid import BaseGrid
-    # from mom_grid import MomGrid
-    # from util import *  # load from file
-
     parser = argparse.ArgumentParser()
     parser.add_argument("ocean_hgrid", help="ocean_hgrid.nc file")
     parser.add_argument("ocean_mask", help="ocean_mask.nc file")
@@ -263,5 +251,3 @@ if __name__ == "__main__":
 
     sys.exit(cice_from_mom(**args))
 
-# else:
-#     # for testing
