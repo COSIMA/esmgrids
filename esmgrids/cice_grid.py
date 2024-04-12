@@ -204,12 +204,13 @@ class CiceGrid(BaseGrid):
         mask[:] = 1 - self.mask_t
         f.close()
 
+
 def cice_from_mom(ocean_hgrid, ocean_mask, grid_file="grid.nc", mask_file="kmt.nc"):
 
     mom = MomGrid.fromfile(ocean_hgrid, mask_file=ocean_mask)
 
     cice = CiceGrid.fromgrid(mom)
-    
+
     cice.create_gridnc(grid_file)
 
     # Add versioning information
@@ -242,6 +243,7 @@ def cice_from_mom(ocean_hgrid, ocean_mask, grid_file="grid.nc", mask_file="kmt.n
 if __name__ == "__main__":
     import argparse
     import sys
+
     # command line arguments
     # import os, sys
     # sys.path.append(os.path.dirname(__file__))

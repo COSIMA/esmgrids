@@ -45,7 +45,7 @@ class CiceGridFixture:
     def __init__(self, mom_grid, tmp_path):
         self.path = str(tmp_path) + "/grid.nc"
         self.kmt_path = str(tmp_path) + "/kmt.nc"
-        cice_from_mom(mom_grid.path, mom_grid.mask_path,self.path, self.kmt_path)
+        cice_from_mom(mom_grid.path, mom_grid.mask_path, self.path, self.kmt_path)
         self.ds = xr.open_dataset(self.path, decode_cf=False)
         self.kmt_ds = xr.open_dataset(self.kmt_path, decode_cf=False)
 
