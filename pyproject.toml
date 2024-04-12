@@ -23,6 +23,7 @@ dependencies = [
     "netcdf4",
     "shapely",
     "pyproj",
+    "xarray",
     "ocean_model_grid_generator@git+https://github.com/nikizadehgfdl/ocean_model_grid_generator@790069b31f9791864ccd514a2b8f53f385a0452e"
 ]
 
