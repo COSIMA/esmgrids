@@ -20,6 +20,3 @@ Grids currently supported:
 pip install '.[tests]'
 python -m pytest -m "not broken"
 ```
-
-Warning: this will download a rather large tarball of test inputs.
-

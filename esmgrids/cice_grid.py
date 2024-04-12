@@ -9,7 +9,7 @@ from esmgrids.util import *
 class CiceGrid(BaseGrid):
 
     def __init__(self, **kwargs):
-        self.type = "Arakawa"
+        self.type = "Arakawa B / C"
         self.full_name = "CICE"
 
         super(CiceGrid, self).__init__(**kwargs)

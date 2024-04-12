@@ -68,7 +68,6 @@ def git_info():
 
 
 def create_nc(filename):
-
     f = Dataset(filename, "w")
 
     f.timeGenerated = f"{datetime.now()}"
