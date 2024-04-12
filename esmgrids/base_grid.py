@@ -49,7 +49,7 @@ class BaseGrid(object):
         self.description = kwargs.get("description", "")
         self.calc_areas = kwargs.get("calc_areas", True)
 
-        if x_t is not None and len(x_t.shape) == 1:
+        if len(x_t.shape) == 1:
             # Tile x_t
             self.x_t = np.tile(x_t, (y_t.shape[0], 1))
             self.y_t = np.tile(y_t, (x_t.shape[0], 1))
@@ -58,7 +58,7 @@ class BaseGrid(object):
             self.x_t = x_t
             self.y_t = y_t
 
-        if len(dx_t.shape) == 1:
+        if dx_t is not None and len(dx_t.shape) == 1:
             # Tile dx_t
             self.dx_t = np.tile(x_t, (dy_t.shape[0], 1))
             self.dy_t = np.tile(y_t, (dx_t.shape[0], 1))
