@@ -121,3 +121,8 @@ class Test():
         # hgrid = os.path.join(input_dir, 'ocean_01_hgrid.nc')
         # mom = MomGrid.fromfile(hgrid, mask_file=mask)
         # check_corners(mom)
+
+
+# To be removed once we have a working test
+def test_dummy():
+    pass
