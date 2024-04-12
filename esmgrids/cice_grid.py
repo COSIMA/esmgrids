@@ -11,7 +11,7 @@ class CiceGrid(BaseGrid):
     def __init__(self, **kwargs):
         self.type = "Arakawa B"
         self.full_name = "CICE"
-        
+
         super(CiceGrid, self).__init__(**kwargs)
 
     @classmethod
@@ -250,4 +250,3 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     sys.exit(cice_from_mom(**args))
-
