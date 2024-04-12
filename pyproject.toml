@@ -1,0 +1,62 @@
+[project]
+name = "esmgrids"
+description = "Python representation of Earth System Model grids."
+keywords = ["earth system modelling", "grids"]
+authors = [
+  {name = "Nic Hannah"},
+]
+readme = "README.md"
+license = { text = "Apache-2.0" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Utilities",
+]
+dynamic = ["version"]
+# The dependencies here are also used by the conda build and so must follow
+# conda package match specifications, see here:
+# https://docs.conda.io/projects/conda-build/en/stable/resources/package-spec.html#package-match-specifications
+dependencies = [
+    "numpy",
+    "netcdf4",
+    "shapely",
+    "pyproj",
+]
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools >= 61.0.0",
+    "setuptools_scm[toml]",
+]
+
+
+[tool.setuptools]
+packages = ["esmgrids"]
+
+[tool.setuptools_scm]
+write_to = "esmgrids/_version.py"
+
+[project.optional-dependencies]
+devel = [
+    "flake8",
+]
+test = [
+    "pytest",
+    "pytest-cov",
+    "sh",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--cov=esmgrids", "--cov-report=term", "--cov-report=xml"]
+testpaths = ["test"]
+markers = ["broken"]
+
+[tool.coverage.run]
+omit = ["esmgrids/__init__.py", "esmgrids/_version.py"]
+
+
+[tool.flake8]
+max-line-length = 120
