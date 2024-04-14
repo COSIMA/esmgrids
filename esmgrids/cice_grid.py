@@ -9,6 +9,7 @@ python cice_grid.py <ocean_hgrid> <ocean_hgrid>
 Dependencies: 
 - See 'pyproject.toml' file (e.g. module load python3, pip install esmgrids)
 """
+
 #!/usr/bin/env python3
 
 import numpy as np
