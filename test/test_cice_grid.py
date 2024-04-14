@@ -6,14 +6,17 @@ from subprocess import run
 
 from esmgrids.cice_grid import cice_from_mom
 
+#create test grids at 4 degrees and 0.1 degrees
+# 4 degress is the lowest tested in ocean_model_grid_generator
+# going higher resolution than 0.1 has too much computational cost
+_test_resolutions = [4, 0.1]
+
 # ----------------
 # test data:
-
-
 class MomGridFixture:
     """Generate a sample tripole grid to use as test data"""
 
-    def __init__(self, tmp_path):
+    def __init__(self, res, tmp_path):
         self.path = str(tmp_path) + "/ocean_hgrid.nc"
         self.mask_path = str(tmp_path) + "/ocean_mask.nc"
 
@@ -21,12 +24,10 @@ class MomGridFixture:
         run(
             [
                 "ocean_grid_generator.py",
-                "-r",
-                "0.25",  # 4 degree grid
+                "-r", str(1/res),
                 "--no_south_cap",
                 "--ensure_nj_even",
-                "-f",
-                self.path,
+                "-f", self.path,
             ]
         )
 
@@ -51,9 +52,11 @@ class CiceGridFixture:
 
 
 # pytest doesn't support class fixtures, so we need these two constructor funcs
-@pytest.fixture
-def mom_grid(tmp_path):
-    return MomGridFixture(tmp_path)
+
+
+@pytest.fixture(params=_test_resolutions)
+def mom_grid(request, tmp_path):
+    return MomGridFixture(request.param, tmp_path)
 
 
 @pytest.fixture
