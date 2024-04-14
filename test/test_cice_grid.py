@@ -9,8 +9,8 @@ from esmgrids.cice_grid import cice_from_mom
 
 # create test grids at 4 degrees and 0.1 degrees
 # 4 degress is the lowest tested in ocean_model_grid_generator
-# going higher resolution than 0.5 has too much computational cost
-_test_resolutions = [4, 0.5]
+# going higher resolution than 0.1 has too much computational cost
+_test_resolutions = [4, 0.1]
 
 
 # so that our fixtures are only create once in this pytest module, we need this special version of 'tmp_path'
