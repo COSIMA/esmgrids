@@ -3,13 +3,20 @@ import xarray as xr
 from numpy.testing import assert_allclose
 from numpy import deg2rad
 from subprocess import run
+from pathlib import Path
 
 from esmgrids.cice_grid import cice_from_mom
 
 # create test grids at 4 degrees and 0.1 degrees
 # 4 degress is the lowest tested in ocean_model_grid_generator
-# going higher resolution than 0.1 has too much computational cost
-_test_resolutions = [4, 0.1]
+# going higher resolution than 0.5 has too much computational cost
+_test_resolutions = [4, 0.5]
+
+
+# so that our fixtures are only create once in this pytest module, we need this special version of 'tmp_path'
+@pytest.fixture(scope="module")
+def tmp_path(tmp_path_factory: pytest.TempdirFactory) -> Path:
+    return tmp_path_factory.mktemp("temp")
 
 
 # ----------------
@@ -55,19 +62,17 @@ class CiceGridFixture:
 
 
 # pytest doesn't support class fixtures, so we need these two constructor funcs
-
-
-@pytest.fixture(params=_test_resolutions)
+@pytest.fixture(scope="module", params=_test_resolutions)
 def mom_grid(request, tmp_path):
     return MomGridFixture(request.param, tmp_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def cice_grid(mom_grid, tmp_path):
     return CiceGridFixture(mom_grid, tmp_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def test_grid_ds(mom_grid):
     # this generates the expected answers
     # In simple terms the MOM supergrid has four cells for each model grid cell. The MOM supergrid includes all edges (left and right) but CICE only uses right/east edges. (e.g. For points/edges of first cell: 0,0 is SW corner, 1,1 is middle of cell, 2,2, is NE corner/edges)
