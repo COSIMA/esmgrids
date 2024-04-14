@@ -1,3 +1,16 @@
+"""
+Script: cice_grid.py
+Description: 
+This file generates a CICE grid from the MOM super grid provided in the input NetCDF file.
+Usage:
+python cice_grid.py <ocean_hgrid> <ocean_hgrid>
+- ocean_hgrid: Path to the MOM super grid NetCDF file.
+- ocean_mask: Path to the corresponding mask NetCDF file.
+Dependencies: 
+- See 'pyproject.toml' file (e.g. module load python3, pip install esmgrids)
+"""
+#!/usr/bin/env python3
+
 import numpy as np
 import netCDF4 as nc
 
