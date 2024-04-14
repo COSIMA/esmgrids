@@ -6,10 +6,11 @@ from subprocess import run
 
 from esmgrids.cice_grid import cice_from_mom
 
-#create test grids at 4 degrees and 0.1 degrees
+# create test grids at 4 degrees and 0.1 degrees
 # 4 degress is the lowest tested in ocean_model_grid_generator
 # going higher resolution than 0.1 has too much computational cost
 _test_resolutions = [4, 0.1]
+
 
 # ----------------
 # test data:
@@ -24,10 +25,12 @@ class MomGridFixture:
         run(
             [
                 "ocean_grid_generator.py",
-                "-r", str(1/res),
+                "-r",
+                str(1 / res),
                 "--no_south_cap",
                 "--ensure_nj_even",
-                "-f", self.path,
+                "-f",
+                self.path,
             ]
         )
 
