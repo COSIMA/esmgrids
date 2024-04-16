@@ -5,7 +5,7 @@ from numpy import deg2rad
 from subprocess import run
 from pathlib import Path
 
-from esmgrids.cice_grid import cice_from_mom
+# from esmgrids.cli import cice_from_mom
 
 # create test grids at 4 degrees and 0.1 degrees
 # 4 degress is the lowest tested in ocean_model_grid_generator
@@ -56,7 +56,19 @@ class CiceGridFixture:
     def __init__(self, mom_grid, tmp_path):
         self.path = str(tmp_path) + "/grid.nc"
         self.kmt_path = str(tmp_path) + "/kmt.nc"
-        cice_from_mom(mom_grid.path, mom_grid.mask_path, self.path, self.kmt_path)
+        run(
+            [
+                "cice_from_mom",
+                "--ocean_hgrid",
+                mom_grid.path,
+                "--ocean_mask",
+                mom_grid.mask_path,
+                "--cice_grid",
+                self.path,
+                "--cice_kmt",
+                self.kmt_path,
+            ]
+        )
         self.ds = xr.open_dataset(self.path, decode_cf=False)
         self.kmt_ds = xr.open_dataset(self.kmt_path, decode_cf=False)
 
@@ -193,17 +205,16 @@ def test_crs_exist(cice_grid):
 def test_inputs_logged(cice_grid, mom_grid):
     # Test: have the source data been logged ?
 
-    for ds in [cice_grid.ds, cice_grid.kmt_ds]:
-        assert hasattr(ds, "inputfile"), "inputfile attribute missing"
-        assert hasattr(ds, "inputfile_md5"), "inputfile md5sum attribute missing"
+    assert hasattr(cice_grid.ds, "inputfile"), "inputfile attribute missing"
+    assert hasattr(cice_grid.kmt_ds, "inputfile"), "inputfile attribute missing"
 
-        sys_md5 = run(["md5sum", ds.inputfile], capture_output=True, text=True)
-        sys_md5 = sys_md5.stdout.split(" ")[0]
-        assert ds.inputfile_md5 == sys_md5, f"inputfile md5sum attribute incorrect, {ds.inputfile_md5} != {sys_md5}"
-
+    input_md5 = run(["md5sum", cice_grid.ds.inputfile], capture_output=True, text=True)
+    input_md5 = input_md5.stdout.split(" ")[0]
+    mask_md5 = run(["md5sum", cice_grid.kmt_ds.inputfile], capture_output=True, text=True)
+    mask_md5 = mask_md5.stdout.split(" ")[0]
+    
     assert (
-        cice_grid.ds.inputfile == mom_grid.path
-    ), "inputfile attribute incorrect ({cice_grid.ds.inputfile} != {mom_grid.path})"
-    assert (
-        cice_grid.kmt_ds.inputfile == mom_grid.mask_path
-    ), "mask inputfile attribute incorrect ({cice_grid.kmt_ds.inputfile} != {mom_grid.mask_path})"
+        cice_grid.ds.inputfile
+        == (mom_grid.path + " (md5 hash: " + input_md5 + "), " + mom_grid.mask_path + " (md5 hash: " + mask_md5 + ")"),
+        "inputfile attribute incorrect ({cice_grid.ds.inputfile} != {mom_grid.path})",
+    )
