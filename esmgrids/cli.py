@@ -1,6 +1,7 @@
 import os
 import argparse
 
+from esmgrids import __version__
 from esmgrids.util import md5sum
 from esmgrids.mom_grid import MomGrid
 from esmgrids.cice_grid import CiceGrid
@@ -24,7 +25,8 @@ def cice_from_mom():
 
     # to-do: need to input package version here
     runcmd = (
-        f"Created using esmgrid: cice_from_mom --ocean_hgrid={ocean_hgrid} --ocean_mask={ocean_mask} "
+        f"Created using esmgrid {__version__}: "
+        f"cice_from_mom --ocean_hgrid={ocean_hgrid} --ocean_mask={ocean_mask} "
         f"--cice_grid={cice_grid} --cice_kmt={cice_kmt}"
     )
     provenance_metadata = {
