@@ -1,10 +1,6 @@
 import numpy as np
 import pyproj
 from shapely.geometry import shape
-import subprocess
-import os
-from datetime import datetime
-from netCDF4 import Dataset
 
 
 proj_str = "+proj=laea +lat_0={} +lon_0={} +ellps=sphere"
@@ -44,39 +40,6 @@ def calc_area_of_polygons(clons, clats):
     assert np.min(areas) > 0
 
     return areas
-
-
-def is_git_repo():
-    """
-    Return True/False depending on whether or not the current directory is a git repo.
-    """
-
-    return subprocess.call(["git", "-C", ".", "status"], stderr=subprocess.STDOUT, stdout=open(os.devnull, "w")) == 0
-
-
-def git_info():
-    """
-    Return the git repo origin url, relative path to this file, and latest commit hash.
-    """
-
-    url = subprocess.check_output(["git", "remote", "get-url", "origin"]).decode("ascii").strip()
-    top_level_dir = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode("ascii").strip()
-    rel_path = os.path.relpath(__file__, top_level_dir)
-    hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
-
-    return url, rel_path, hash
-
-
-def create_nc(filename):
-    f = Dataset(filename, "w")
-
-    f.timeGenerated = f"{datetime.now()}"
-    f.created_by = f"{os.environ.get('USER')}"
-    if is_git_repo():
-        git_url, _, git_hash = git_info()
-        f.history = f"Created using commit {git_hash} of {git_url}"
-
-    return f
 
 
 def md5sum(filename):

@@ -52,6 +52,9 @@ test = [
     "ocean_model_grid_generator@git+https://github.com/nikizadehgfdl/ocean_model_grid_generator@790069b31f9791864ccd514a2b8f53f385a0452e"
 ]
 
+[project.scripts]
+cice_from_mom = "esmgrids.cli:cice_from_mom"
+
 [tool.pytest.ini_options]
 addopts = ["--cov=esmgrids", "--cov-report=term", "--cov-report=xml"]
 testpaths = ["test"]

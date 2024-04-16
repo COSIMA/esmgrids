@@ -1,29 +1,13 @@
-"""
-Script: cice_grid.py
-Description: 
-This file generates a CICE grid from the MOM super grid provided in the input NetCDF file.
-Usage:
-python cice_grid.py <ocean_hgrid> <ocean_hgrid>
-- ocean_hgrid: Path to the MOM super grid NetCDF file.
-- ocean_mask: Path to the corresponding mask NetCDF file.
-Dependencies: 
-- See 'pyproject.toml' file (e.g. module load python3, pip install esmgrids)
-"""
-
-#!/usr/bin/env python3
-
 import numpy as np
 import netCDF4 as nc
 
 from esmgrids.base_grid import BaseGrid
-from esmgrids.mom_grid import MomGrid
-from esmgrids.util import *
 
 
 class CiceGrid(BaseGrid):
 
     def __init__(self, **kwargs):
-        self.type = "Arakawa B / C"
+        self.type = "Arakawa B"
         self.full_name = "CICE"
 
         super(CiceGrid, self).__init__(**kwargs)
@@ -81,90 +65,90 @@ class CiceGrid(BaseGrid):
             description=description,
         )
 
-    def create_2d_nc_var(self, nc, name):
-        # set chunksizes based on OM2 config
-        # To-do: load these from a configuration file?
-        if self.num_lon_points == 360:  # 1deg
-            chunksizes = (150, 180)
-        elif self.num_lon_points == 1440:  # 0.25deg
-            chunksizes = (540, 720)
-        elif self.num_lon_points == 3600:  # 0.01deg
-            chunksizes = (270, 360)
-        else:
-            chunksizes = None
-
-        return nc.createVariable(
+    def _create_2d_nc_var(self, f, name):
+        return f.createVariable(
             name,
             "f8",
             dimensions=("ny", "nx"),
             compression="zlib",
             complevel=1,
-            chunksizes=chunksizes,
         )
 
-    def write(self, nc):
+    def write(self, grid_filename, mask_filename, metadata=None):
         """
-        Write out CICE grid to netcdf, nc is a netcdf4 Dataset obj
+        Write out CICE grid to netcdf
+
+        Parameters
+        ----------
+        grid_filename: str
+            The name of the grid file to write
+        mask_filename: str
+            The name of the mask file to write
+        metadata: dict
+            Any global or variable metadata attributes to add to the files being written
         """
 
+        # Grid file
+        f = nc.Dataset(grid_filename, "w")
+
         # Create dimensions.
-        nc.createDimension("nx", self.num_lon_points)
+        f.createDimension("nx", self.num_lon_points)
         # nx is the grid_longitude but doesn't have a value other than its index
-        nc.createDimension("ny", self.num_lat_points)
+        f.createDimension("ny", self.num_lat_points)
         # ny is the grid_latitude but doesn't have a value other than its index
 
         # Make all CICE grid variables.
         # names are based on https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
-        nc.Conventions = "CF-1.6"
+        f.Conventions = "CF-1.6"
 
-        ulat = self.create_2d_nc_var(nc, "ulat")
+        ulat = self._create_2d_nc_var(f, "ulat")
         ulat.units = "radians"
         ulat.long_name = "Latitude of U points"
         ulat.standard_name = "latitude"
-        ulon = self.create_2d_nc_var(nc, "ulon")
+        ulon = self._create_2d_nc_var(f, "ulon")
         ulon.units = "radians"
         ulon.long_name = "Longitude of U points"
         ulon.standard_name = "longitude"
-        tlat = self.create_2d_nc_var(nc, "tlat")
+        tlat = self._create_2d_nc_var(f, "tlat")
         tlat.units = "radians"
         tlat.long_name = "Latitude of T points"
         tlat.standard_name = "latitude"
-        tlon = self.create_2d_nc_var(nc, "tlon")
+        tlon = self._create_2d_nc_var(f, "tlon")
         tlon.units = "radians"
         tlon.long_name = "Longitude of T points"
         tlon.standard_name = "longitude"
 
-        htn = self.create_2d_nc_var(nc, "htn")
+        htn = self._create_2d_nc_var(f, "htn")
         htn.units = "cm"
         htn.long_name = "Width of T cells on North side."
         htn.coordinates = "ulat tlon"
         htn.grid_mapping = "crs"
-        hte = self.create_2d_nc_var(nc, "hte")
+        hte = self._create_2d_nc_var(f, "hte")
         hte.units = "cm"
         hte.long_name = "Width of T cells on East side."
         hte.coordinates = "tlat ulon"
         hte.grid_mapping = "crs"
 
-        angle = self.create_2d_nc_var(nc, "angle")
+        angle = self._create_2d_nc_var(f, "angle")
         angle.units = "radians"
         angle.long_name = "Rotation angle of U cells."
         angle.standard_name = "angle_of_rotation_from_east_to_x"
         angle.coordinates = "ulat ulon"
         angle.grid_mapping = "crs"
-        angleT = self.create_2d_nc_var(nc, "angleT")
+        angleT = self._create_2d_nc_var(f, "angleT")
         angleT.units = "radians"
         angleT.long_name = "Rotation angle of T cells."
         angleT.standard_name = "angle_of_rotation_from_east_to_x"
         angleT.coordinates = "tlat tlon"
         angleT.grid_mapping = "crs"
 
-        area_t = self.create_2d_nc_var(nc, "tarea")
+        area_t = self._create_2d_nc_var(f, "tarea")
         area_t.units = "m^2"
         area_t.long_name = "Area of T cells."
         area_t.standard_name = "cell_area"
         area_t.coordinates = "tlat tlon"
         area_t.grid_mapping = "crs"
-        area_u = self.create_2d_nc_var(nc, "uarea")
+        area_u = self._create_2d_nc_var(f, "uarea")
         area_u.units = "m^2"
         area_u.long_name = "Area of U cells."
         area_u.standard_name = "cell_area"
@@ -187,69 +171,38 @@ class CiceGrid(BaseGrid):
         angle[:] = np.deg2rad(self.angle_u[:])
         angleT[:] = np.deg2rad(self.angle_t[:])
 
-        nc.close()
+        # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
+        crs = f.createVariable("crs", "S1")
+        crs.grid_mapping_name = "tripolar_latitude_longitude"
+        crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
 
-    def write_mask(self, nc):
-        """
-        Write out CICE mask/kmt to netcdf. nc is a Netcdf4 Dataset obj
-        """
+        # Add global metadata
+        if metadata:
+            for attr, meta in metadata.items():
+                f.setncattr(attr, meta)
 
-        nc.createDimension("nx", self.num_lon_points)
-        nc.createDimension("ny", self.num_lat_points)
-        mask = nc.createVariable("kmt", "f8", dimensions=("ny", "nx"), compression="zlib", complevel=1)
+        f.close()
 
+        # Mask file
+        f = nc.Dataset(mask_filename, "w")
+
+        f.createDimension("nx", self.num_lon_points)
+        f.createDimension("ny", self.num_lat_points)
+        mask = self._create_2d_nc_var(f, "kmt")
         mask.grid_mapping = "crs"
         mask.standard_name = "sea_binary_mask"
 
         # CICE uses 0 as masked, whereas internally we use 1 as masked.
         mask[:] = 1 - self.mask_t
-        nc.close()
 
+        # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
+        crs = f.createVariable("crs", "S1")
+        crs.grid_mapping_name = "tripolar_latitude_longitude"
+        crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
 
-def cice_from_mom(ocean_hgrid, ocean_mask, grid_file="grid.nc", mask_file="kmt.nc"):
+        # Add global metadata
+        if metadata:
+            for attr, meta in metadata.items():
+                f.setncattr(attr, meta)
 
-    mom = MomGrid.fromfile(ocean_hgrid, mask_file=ocean_mask)
-
-    cice = CiceGrid.fromgrid(mom)
-
-    cice.grid_nc = create_nc(grid_file)
-
-    # Add versioning information
-    cice.grid_nc.inputfile = f"{ocean_hgrid}"
-    cice.grid_nc.inputfile_md5 = md5sum(ocean_hgrid)
-    cice.grid_nc.history_command = f"python make_CICE_grid.py {ocean_hgrid} {ocean_mask}"
-
-    # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
-    crs = cice.grid_nc.createVariable("crs", "S1")
-    crs.grid_mapping_name = "tripolar_latitude_longitude"
-    crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
-
-    cice.write(cice.grid_nc)
-
-    cice.mask_nc = create_nc(mask_file)
-
-    # Add versioning information
-    cice.mask_nc.inputfile = f"{ocean_mask}"
-    cice.mask_nc.inputfile_md5 = md5sum(ocean_mask)
-    cice.mask_nc.history_command = f"python make_CICE_grid.py {ocean_hgrid} {ocean_mask}"
-
-    # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
-    crs = cice.mask_nc.createVariable("crs", "S1")
-    crs.grid_mapping_name = "tripolar_latitude_longitude"
-    crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
-
-    cice.write_mask(cice.mask_nc)
-
-
-if __name__ == "__main__":
-    import argparse
-    import sys
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("ocean_hgrid", help="ocean_hgrid.nc file")
-    parser.add_argument("ocean_mask", help="ocean_mask.nc file")
-    # to-do: add argument for CRS & output filenames?
-
-    args = vars(parser.parse_args())
-
-    sys.exit(cice_from_mom(**args))
+        f.close()
