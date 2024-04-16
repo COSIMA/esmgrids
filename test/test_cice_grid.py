@@ -213,11 +213,19 @@ def test_inputs_logged(cice_grid, mom_grid):
     for ds in [cice_grid.ds, cice_grid.kmt_ds]:
         assert (
             ds.inputfile
-            == (mom_grid.path + " (md5 hash: " + input_md5 + "), " + mom_grid.mask_path + " (md5 hash: " + mask_md5 + ")"),
+            == (
+                mom_grid.path
+                + " (md5 hash: "
+                + input_md5
+                + "), "
+                + mom_grid.mask_path
+                + " (md5 hash: "
+                + mask_md5
+                + ")"
+            ),
             "inputfile attribute incorrect ({ds.inputfile} != {mom_grid.path})",
         )
 
         assert hasattr(ds, "inputfile"), "inputfile attribute missing"
 
         assert hasattr(ds, "history"), "history attribute missing"
-
