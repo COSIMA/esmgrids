@@ -173,7 +173,6 @@ class CiceGrid(BaseGrid):
 
         # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
         crs = f.createVariable("crs", "S1")
-        crs.grid_mapping_name = "tripolar_latitude_longitude"
         crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
 
         # Add global metadata
@@ -197,7 +196,6 @@ class CiceGrid(BaseGrid):
 
         # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
         crs = f.createVariable("crs", "S1")
-        crs.grid_mapping_name = "tripolar_latitude_longitude"
         crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
 
         # Add global metadata
