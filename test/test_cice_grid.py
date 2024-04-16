@@ -205,16 +205,19 @@ def test_crs_exist(cice_grid):
 def test_inputs_logged(cice_grid, mom_grid):
     # Test: have the source data been logged ?
 
-    assert hasattr(cice_grid.ds, "inputfile"), "inputfile attribute missing"
-    assert hasattr(cice_grid.kmt_ds, "inputfile"), "inputfile attribute missing"
-
     input_md5 = run(["md5sum", cice_grid.ds.inputfile], capture_output=True, text=True)
     input_md5 = input_md5.stdout.split(" ")[0]
     mask_md5 = run(["md5sum", cice_grid.kmt_ds.inputfile], capture_output=True, text=True)
     mask_md5 = mask_md5.stdout.split(" ")[0]
 
-    assert (
-        cice_grid.ds.inputfile
-        == (mom_grid.path + " (md5 hash: " + input_md5 + "), " + mom_grid.mask_path + " (md5 hash: " + mask_md5 + ")"),
-        "inputfile attribute incorrect ({cice_grid.ds.inputfile} != {mom_grid.path})",
-    )
+    for ds in [cice_grid.ds, cice_grid.kmt_ds]:
+        assert (
+            ds.inputfile
+            == (mom_grid.path + " (md5 hash: " + input_md5 + "), " + mom_grid.mask_path + " (md5 hash: " + mask_md5 + ")"),
+            "inputfile attribute incorrect ({ds.inputfile} != {mom_grid.path})",
+        )
+
+        assert hasattr(ds, "inputfile"), "inputfile attribute missing"
+
+        assert hasattr(ds, "history"), "history attribute missing"
+

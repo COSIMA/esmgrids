@@ -15,15 +15,13 @@ def cice_from_mom():
     parser.add_argument("--ocean_mask", type=str, help="Input MOM ocean_mask.nc mask file")
     parser.add_argument("--cice_grid", type=str, default="grid.nc", help="Output CICE grid file")
     parser.add_argument("--cice_kmt", type=str, default="kmt.nc", help="Output CICE kmt file")
-    # to-do: add argument for CRS?
-
+    
     args = parser.parse_args()
     ocean_hgrid = os.path.abspath(args.ocean_hgrid)
     ocean_mask = os.path.abspath(args.ocean_mask)
     cice_grid = os.path.abspath(args.cice_grid)
     cice_kmt = os.path.abspath(args.cice_kmt)
 
-    # to-do: need to input package version here
     runcmd = (
         f"Created using esmgrid {__version__}: "
         f"cice_from_mom --ocean_hgrid={ocean_hgrid} --ocean_mask={ocean_mask} "
