@@ -212,7 +212,7 @@ def test_inputs_logged(cice_grid, mom_grid):
     input_md5 = input_md5.stdout.split(" ")[0]
     mask_md5 = run(["md5sum", cice_grid.kmt_ds.inputfile], capture_output=True, text=True)
     mask_md5 = mask_md5.stdout.split(" ")[0]
-    
+
     assert (
         cice_grid.ds.inputfile
         == (mom_grid.path + " (md5 hash: " + input_md5 + "), " + mom_grid.mask_path + " (md5 hash: " + mask_md5 + ")"),
