@@ -1,7 +1,7 @@
 import os
 import argparse
 
-from esmgrids import __version__
+from esmgrids import safe_version
 from esmgrids.util import md5sum
 from esmgrids.mom_grid import MomGrid
 from esmgrids.cice_grid import CiceGrid
@@ -23,9 +23,9 @@ def cice_from_mom():
     cice_grid = os.path.abspath(args.cice_grid)
     cice_kmt = os.path.abspath(args.cice_kmt)
 
-    # to-do: need to input package version here
+    version = safe_version()
     runcmd = (
-        f"Created using esmgrid {__version__}: "
+        f"Created using https://github.com/COSIMA/esmgrids {version}: "
         f"cice_from_mom --ocean_hgrid={ocean_hgrid} --ocean_mask={ocean_mask} "
         f"--cice_grid={cice_grid} --cice_kmt={cice_kmt}"
     )
