@@ -2,6 +2,7 @@ import numpy as np
 import pyproj
 from shapely.geometry import shape
 
+
 proj_str = "+proj=laea +lat_0={} +lon_0={} +ellps=sphere"
 
 
@@ -39,3 +40,11 @@ def calc_area_of_polygons(clons, clats):
     assert np.min(areas) > 0
 
     return areas
+
+
+def md5sum(filename):
+    from hashlib import md5
+    from mmap import mmap, ACCESS_READ
+
+    with open(filename) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+        return md5(file).hexdigest()

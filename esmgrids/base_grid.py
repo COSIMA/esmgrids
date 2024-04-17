@@ -1,7 +1,7 @@
 import numpy as np
 import netCDF4 as nc
 
-from .util import calc_area_of_polygons
+from esmgrids.util import calc_area_of_polygons
 
 
 class BaseGrid(object):

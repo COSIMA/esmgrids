@@ -1,13 +1,13 @@
 import numpy as np
 import netCDF4 as nc
 
-from .base_grid import BaseGrid
+from esmgrids.base_grid import BaseGrid
 
 
 class CiceGrid(BaseGrid):
 
     def __init__(self, **kwargs):
-        self.type = "Arakawa B"
+        self.type = "Arakawa B / C"
         self.full_name = "CICE"
 
         super(CiceGrid, self).__init__(**kwargs)
@@ -65,66 +65,95 @@ class CiceGrid(BaseGrid):
             description=description,
         )
 
-    def write(self, grid_filename, mask_filename):
+    def _create_2d_nc_var(self, f, name):
+        return f.createVariable(
+            name,
+            "f8",
+            dimensions=("ny", "nx"),
+            compression="zlib",
+            complevel=1,
+        )
+
+    def write(self, grid_filename, mask_filename, metadata=None):
         """
-        Write out CICE grid to netcdf.
+        Write out CICE grid to netcdf
+
+        Parameters
+        ----------
+        grid_filename: str
+            The name of the grid file to write
+        mask_filename: str
+            The name of the mask file to write
+        metadata: dict
+            Any global or variable metadata attributes to add to the files being written
         """
 
+        # Grid file
         f = nc.Dataset(grid_filename, "w")
 
         # Create dimensions.
         f.createDimension("nx", self.num_lon_points)
+        # nx is the grid_longitude but doesn't have a value other than its index
         f.createDimension("ny", self.num_lat_points)
-        f.createDimension("nc", 4)
+        # ny is the grid_latitude but doesn't have a value other than its index
 
         # Make all CICE grid variables.
-        ulat = f.createVariable("ulat", "f8", dimensions=("ny", "nx"))
+        # names are based on https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
+        f.Conventions = "CF-1.6"
+
+        ulat = self._create_2d_nc_var(f, "ulat")
         ulat.units = "radians"
-        ulat.title = "Latitude of U points"
-        ulon = f.createVariable("ulon", "f8", dimensions=("ny", "nx"))
+        ulat.long_name = "Latitude of U points"
+        ulat.standard_name = "latitude"
+        ulon = self._create_2d_nc_var(f, "ulon")
         ulon.units = "radians"
-        ulon.title = "Longitude of U points"
-        tlat = f.createVariable("tlat", "f8", dimensions=("ny", "nx"))
+        ulon.long_name = "Longitude of U points"
+        ulon.standard_name = "longitude"
+        tlat = self._create_2d_nc_var(f, "tlat")
         tlat.units = "radians"
-        tlat.title = "Latitude of T points"
-        tlon = f.createVariable("tlon", "f8", dimensions=("ny", "nx"))
+        tlat.long_name = "Latitude of T points"
+        tlat.standard_name = "latitude"
+        tlon = self._create_2d_nc_var(f, "tlon")
         tlon.units = "radians"
-        tlon.title = "Longitude of T points"
+        tlon.long_name = "Longitude of T points"
+        tlon.standard_name = "longitude"
 
-        if self.clon_t is not None:
-            clon_t = f.createVariable("clon_t", "f8", dimensions=("nc", "ny", "nx"))
-            clon_t.units = "radians"
-            clon_t.title = "Longitude of T cell corners"
-            clat_t = f.createVariable("clat_t", "f8", dimensions=("nc", "ny", "nx"))
-            clat_t.units = "radians"
-            clat_t.title = "Latitude of T cell corners"
-            clon_u = f.createVariable("clon_u", "f8", dimensions=("nc", "ny", "nx"))
-            clon_u.units = "radians"
-            clon_u.title = "Longitude of U cell corners"
-            clat_u = f.createVariable("clat_u", "f8", dimensions=("nc", "ny", "nx"))
-            clat_u.units = "radians"
-            clat_u.title = "Latitude of U cell corners"
-
-        htn = f.createVariable("htn", "f8", dimensions=("ny", "nx"))
+        htn = self._create_2d_nc_var(f, "htn")
         htn.units = "cm"
-        htn.title = "Width of T cells on North side."
-        hte = f.createVariable("hte", "f8", dimensions=("ny", "nx"))
+        htn.long_name = "Width of T cells on North side."
+        htn.coordinates = "ulat tlon"
+        htn.grid_mapping = "crs"
+        hte = self._create_2d_nc_var(f, "hte")
         hte.units = "cm"
-        hte.title = "Width of T cells on East side."
+        hte.long_name = "Width of T cells on East side."
+        hte.coordinates = "tlat ulon"
+        hte.grid_mapping = "crs"
 
-        angle = f.createVariable("angle", "f8", dimensions=("ny", "nx"))
+        angle = self._create_2d_nc_var(f, "angle")
         angle.units = "radians"
-        angle.title = "Rotation angle of U cells."
-        angleT = f.createVariable("angleT", "f8", dimensions=("ny", "nx"))
+        angle.long_name = "Rotation angle of U cells."
+        angle.standard_name = "angle_of_rotation_from_east_to_x"
+        angle.coordinates = "ulat ulon"
+        angle.grid_mapping = "crs"
+        angleT = self._create_2d_nc_var(f, "angleT")
         angleT.units = "radians"
-        angleT.title = "Rotation angle of T cells."
+        angleT.long_name = "Rotation angle of T cells."
+        angleT.standard_name = "angle_of_rotation_from_east_to_x"
+        angleT.coordinates = "tlat tlon"
+        angleT.grid_mapping = "crs"
 
-        area_t = f.createVariable("tarea", "f8", dimensions=("ny", "nx"))
+        area_t = self._create_2d_nc_var(f, "tarea")
         area_t.units = "m^2"
-        area_t.title = "Area of T cells."
-        area_u = f.createVariable("uarea", "f8", dimensions=("ny", "nx"))
+        area_t.long_name = "Area of T cells."
+        area_t.standard_name = "cell_area"
+        area_t.coordinates = "tlat tlon"
+        area_t.grid_mapping = "crs"
+        area_u = self._create_2d_nc_var(f, "uarea")
         area_u.units = "m^2"
-        area_u.title = "Area of U cells."
+        area_u.long_name = "Area of U cells."
+        area_u.standard_name = "cell_area"
+        area_u.coordinates = "ulat ulon"
+        area_u.grid_mapping = "crs"
 
         area_t[:] = self.area_t[:]
         area_u[:] = self.area_u[:]
@@ -135,12 +164,6 @@ class CiceGrid(BaseGrid):
         ulat[:] = np.deg2rad(self.y_u)
         ulon[:] = np.deg2rad(self.x_u)
 
-        if self.clon_t is not None:
-            clon_t[:] = np.deg2rad(self.clon_t)
-            clat_t[:] = np.deg2rad(self.clat_t)
-            clon_u[:] = np.deg2rad(self.clon_u)
-            clat_u[:] = np.deg2rad(self.clat_u)
-
         # Convert from m to cm.
         htn[:] = self.dx_tn[:] * 100.0
         hte[:] = self.dy_te[:] * 100.0
@@ -148,11 +171,36 @@ class CiceGrid(BaseGrid):
         angle[:] = np.deg2rad(self.angle_u[:])
         angleT[:] = np.deg2rad(self.angle_t[:])
 
+        # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
+        crs = f.createVariable("crs", "S1")
+        crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
+
+        # Add global metadata
+        if metadata:
+            for attr, meta in metadata.items():
+                f.setncattr(attr, meta)
+
         f.close()
 
-        with nc.Dataset(mask_filename, "w") as f:
-            f.createDimension("nx", self.num_lon_points)
-            f.createDimension("ny", self.num_lat_points)
-            mask = f.createVariable("kmt", "f8", dimensions=("ny", "nx"))
-            # CICE uses 0 as masked, whereas internally we use 1 as masked.
-            mask[:] = 1 - self.mask_t
+        # Mask file
+        f = nc.Dataset(mask_filename, "w")
+
+        f.createDimension("nx", self.num_lon_points)
+        f.createDimension("ny", self.num_lat_points)
+        mask = self._create_2d_nc_var(f, "kmt")
+        mask.grid_mapping = "crs"
+        mask.standard_name = "sea_binary_mask"
+
+        # CICE uses 0 as masked, whereas internally we use 1 as masked.
+        mask[:] = 1 - self.mask_t
+
+        # Add the typical crs (i.e. WGS84/EPSG4326 , but in radians).
+        crs = f.createVariable("crs", "S1")
+        crs.crs_wkt = 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["radians",1,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]'
+
+        # Add global metadata
+        if metadata:
+            for attr, meta in metadata.items():
+                f.setncattr(attr, meta)
+
+        f.close()

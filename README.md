@@ -1,6 +1,4 @@
-
-[![Code Health](https://landscape.io/github/DoublePrecision/esmgrids/master/landscape.svg?style=flat)](https://landscape.io/github/DoublePrecision/esmgrids/master)
-[![Build Status](https://travis-ci.org/DoublePrecision/esmgrids.svg?branch=master)](https://travis-ci.org/DoublePrecision/esmgrids)
+![Code Health](https://github.com/COSIMA/esmgrids/actions/workflows/ci.yml/badge.svg)
 
 # esmgrids
 
@@ -19,10 +17,6 @@ Grids currently supported:
 ## To run the tests
 
 ```
-conda env create -n grids python3
-source activate grids
-python -m pytest
+pip install '.[tests]'
+python -m pytest -m "not broken"
 ```
-
-Warning: this will download a rather large tarball of test inputs.
-

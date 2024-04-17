@@ -1,7 +1,7 @@
 import numpy as np
 import netCDF4 as nc
 
-from .base_grid import BaseGrid
+from esmgrids.base_grid import BaseGrid
 
 
 class MomGrid(BaseGrid):
@@ -86,9 +86,8 @@ class MomGrid(BaseGrid):
                 dy_ue = dy_ext[1::2, 3::2] + dy_ext[2::2, 3::2]
 
                 angle_dx = f.variables["angle_dx"][:]
-                # The angle of rotation is a corner cell centres and applies to
-                # both t and u cells.
-                angle_t = angle_dx[2::2, 2::2]
+
+                angle_t = angle_dx[1::2, 1::2]
                 angle_u = angle_dx[2::2, 2::2]
 
                 area = f.variables["area"][:]

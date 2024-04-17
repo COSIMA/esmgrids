@@ -90,22 +90,6 @@ class Test:
         return os.path.join(self.test_data_dir, "input")
 
     @pytest.mark.broken
-    def test_convert_mom_to_cice(self, input_dir, output_dir):
-        """
-        Read in a MOM grid and write out a cice grid at the same resolution.
-        """
-
-        mask = os.path.join(input_dir, "ocean_01_mask.nc")
-        hgrid = os.path.join(input_dir, "ocean_01_hgrid.nc")
-        mom = MomGrid.fromfile(hgrid, mask_file=mask)
-        cice = CiceGrid.fromgrid(mom)
-        grid_file = os.path.join(output_dir, "grid.nc")
-        mask_file = os.path.join(output_dir, "kmt.nc")
-        cice.write(grid_file, mask_file)
-
-        # FIXME actually test that the CICE grid is good.
-
-    @pytest.mark.broken
     def test_corners(self, input_dir):
         """
         Check some corners fields, clat_t, clon_t etc.
