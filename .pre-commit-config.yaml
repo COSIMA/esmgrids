@@ -6,6 +6,5 @@ repos:
       - id: black
         name: black
         entry: black
-        args: ['esmgrids', 'test']
         language: system
         types: [python]
