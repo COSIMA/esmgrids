@@ -1,0 +1,11 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: local
+    hooks:
+      - id: black
+        name: black
+        entry: black
+        args: ['esmgrids', 'test']
+        language: system
+        types: [python]

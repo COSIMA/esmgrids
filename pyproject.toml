@@ -32,7 +32,6 @@ requires = [
     "setuptools_scm[toml]",
 ]
 
-
 [tool.setuptools]
 packages = ["esmgrids"]
 
@@ -43,6 +42,7 @@ write_to = "esmgrids/_version.py"
 devel = [
     "flake8",
     "black",
+    "pre-commit"
 ]
 test = [
     "pytest",
