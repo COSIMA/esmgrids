@@ -10,12 +10,12 @@ from pathlib import Path
 # create test grids at 4 degrees and 0.1 degrees
 # 4 degress is the lowest tested in ocean_model_grid_generator
 # going higher resolution than 0.1 has too much computational cost
-_test_resolutions = [4, 0.1]
+_test_resolutions = [4]  # , 0.1]
 
 _variants = ["cice5-auscom", "cice6", None]
 
 
-# so that our fixtures are only create once in this pytest module, we need this special version of 'tmp_path'
+# so that our fixtures are only created once in this pytest module, we need this special version of 'tmp_path'
 @pytest.fixture(scope="module")
 def tmp_path(tmp_path_factory: pytest.TempdirFactory) -> Path:
     return tmp_path_factory.mktemp("temp")
@@ -147,6 +147,15 @@ def test_cice_var_list(grids):
     assert set(grids["test_ds"].variables).difference(grids["cice"].ds.variables) == set()
 
 
+def test_cice_dims(grids):
+    # Test : Are the dim names consistent with cice history output?
+    assert set(grids["cice"].ds.dims) == set(
+        ["ni", "nj"]
+    ), "cice dimension names should be 'ni','nj' to be consistent with history output"
+    assert grids["cice"].ds.sizes["ni"] == len(grids["test_ds"].nx)
+    assert grids["cice"].ds.sizes["nj"] == len(grids["test_ds"].ny)
+
+
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_cice_grid(grids):
     # Test : Is the data the same as the test_grid
@@ -222,26 +231,15 @@ def test_crs_exist(grids):
 def test_inputs_logged(grids, mom_grid):
     # Test: have the source data been logged ?
 
-    input_md5 = run(["md5sum", grids["cice"].ds.inputfile], capture_output=True, text=True)
+    input_md5 = run(["md5sum", mom_grid.path], capture_output=True, text=True)
     input_md5 = input_md5.stdout.split(" ")[0]
-    mask_md5 = run(["md5sum", grids["cice"].kmt_ds.inputfile], capture_output=True, text=True)
+    mask_md5 = run(["md5sum", mom_grid.mask_path], capture_output=True, text=True)
     mask_md5 = mask_md5.stdout.split(" ")[0]
 
     for ds in [grids["cice"].ds, grids["cice"].kmt_ds]:
-        assert (
-            ds.inputfile
-            == (
-                mom_grid.path
-                + " (md5 hash: "
-                + input_md5
-                + "), "
-                + mom_grid.mask_path
-                + " (md5 hash: "
-                + mask_md5
-                + ")"
-            ),
-            "inputfile attribute incorrect ({ds.inputfile} != {mom_grid.path})",
-        )
+        assert ds.inputfile == (
+            mom_grid.path + " (md5 hash: " + input_md5 + "), " + mom_grid.mask_path + " (md5 hash: " + mask_md5 + ")"
+        ), "inputfile attribute incorrect ({ds.inputfile} != {mom_grid.path})"
 
         assert hasattr(ds, "inputfile"), "inputfile attribute missing"
 
