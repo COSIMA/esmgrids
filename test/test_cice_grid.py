@@ -10,7 +10,7 @@ from pathlib import Path
 # create test grids at 4 degrees and 0.1 degrees
 # 4 degress is the lowest tested in ocean_model_grid_generator
 # going higher resolution than 0.1 has too much computational cost
-_test_resolutions = [4]  # , 0.1]
+_test_resolutions = [4, 0.1]
 
 _variants = ["cice5-auscom", "cice6", None]
 
@@ -175,7 +175,7 @@ def test_cice_kmt(mom_grid, grids):
 
 def test_cice_grid_attributes(grids):
     # Test: do the expected attributes to exist in the cice ds
-To-do: rewrite test using the CF-checker (or similar)
+    # To-do: rewrite test using the CF-checker (or similar)
     cf_attributes = {
         "ulat": {"standard_name": "latitude", "units": "radians"},
         "ulon": {"standard_name": "longitude", "units": "radians"},
