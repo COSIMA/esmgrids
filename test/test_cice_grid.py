@@ -175,7 +175,7 @@ def test_cice_kmt(mom_grid, grids):
 
 def test_cice_grid_attributes(grids):
     # Test: do the expected attributes to exist in the cice ds
-
+To-do: rewrite test using the CF-checker (or similar)
     cf_attributes = {
         "ulat": {"standard_name": "latitude", "units": "radians"},
         "ulon": {"standard_name": "longitude", "units": "radians"},
