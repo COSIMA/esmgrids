@@ -1,5 +1,6 @@
 import numpy as np
 import netCDF4 as nc
+from warnings import warn
 
 from esmgrids.base_grid import BaseGrid
 
@@ -143,7 +144,10 @@ class CiceGrid(BaseGrid):
         if variant == "cice5-auscom":
             angleT = self._create_2d_nc_var(f, "angleT")
         else:  # variant==cice6
+            if variant != "cice6":
+                warn(f"{variant} not recognised, using variant='cice6'", UserWarning)
             angleT = self._create_2d_nc_var(f, "anglet")
+
         angleT.units = "radians"
         angleT.long_name = "Rotation angle of T cells."
         angleT.standard_name = "angle_of_rotation_from_east_to_x"

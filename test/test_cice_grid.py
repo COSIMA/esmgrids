@@ -1,11 +1,13 @@
 import pytest
 import xarray as xr
+import warnings
 from numpy.testing import assert_allclose
 from numpy import deg2rad
 from subprocess import run
 from pathlib import Path
 
-# from esmgrids.cli import cice_from_mom
+from esmgrids.mom_grid import MomGrid
+from esmgrids.cice_grid import CiceGrid
 
 # create test grids at 4 degrees and 0.1 degrees
 # 4 degress is the lowest tested in ocean_model_grid_generator
@@ -244,3 +246,19 @@ def test_inputs_logged(grids, mom_grid):
         assert hasattr(ds, "inputfile"), "inputfile attribute missing"
 
         assert hasattr(ds, "history"), "history attribute missing"
+
+
+def test_variant(mom_grid, tmp_path):
+    # Is a warning issued for variant not equal to 'cice6' or 'cice5-auscom'
+
+    mom = MomGrid.fromfile(mom_grid.path, mask_file=mom_grid.mask_path)
+    cice = CiceGrid.fromgrid(mom)
+
+    with pytest.warns(UserWarning, match="cice7 not recognised"):
+        cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="cice7")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="cice6")
+        cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="cice5-auscom")
+        cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc")
