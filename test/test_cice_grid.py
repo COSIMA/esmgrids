@@ -14,7 +14,7 @@ from esmgrids.cice_grid import CiceGrid
 # going higher resolution than 0.1 has too much computational cost
 _test_resolutions = [4, 0.1]
 
-_variants = ["cice5-auscom", "cice6", None]
+_variants = ["cice5-auscom", None]
 
 
 # so that our fixtures are only created once in this pytest module, we need this special version of 'tmp_path'
@@ -101,7 +101,7 @@ def gen_grid_ds(mom_grid, variant):
     test_grid["tlon"] = deg2rad(t_points.x)
 
     test_grid["angle"] = deg2rad(u_points.angle_dx)  # angle at u point
-    if variant == "cice5-auscom" or variant is None:
+    if variant == "cice5-auscom":
         test_grid["angleT"] = deg2rad(t_points.angle_dx)
     else:  # cice6
         test_grid["anglet"] = deg2rad(t_points.angle_dx)
@@ -249,16 +249,20 @@ def test_inputs_logged(grids, mom_grid):
 
 
 def test_variant(mom_grid, tmp_path):
-    # Is a warning issued for variant not equal to 'cice6' or 'cice5-auscom'
+    # Is a error given for variant not equal to None or 'cice5-auscom'
 
     mom = MomGrid.fromfile(mom_grid.path, mask_file=mom_grid.mask_path)
     cice = CiceGrid.fromgrid(mom)
 
-    with pytest.warns(UserWarning, match="cice7 not recognised"):
-        cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="cice7")
+    with pytest.raises(NotImplementedError, match="andrew not recognised"):
+        cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="andrew")
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="cice6")
+    try:
         cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="cice5-auscom")
+    except:
+        assert False, "Failed to write cice grid with valid input arguments provided"
+
+    try:
         cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc")
+    except:
+        assert False, "Failed to write cice grid with 'None' variant"

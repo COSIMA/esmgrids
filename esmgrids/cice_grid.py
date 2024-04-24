@@ -79,7 +79,7 @@ class CiceGrid(BaseGrid):
             complevel=1,
         )
 
-    def write(self, grid_filename, mask_filename, metadata=None, variant="cice5-auscom"):
+    def write(self, grid_filename, mask_filename, metadata=None, variant=None):
         """
         Write out CICE grid to netcdf
 
@@ -92,6 +92,9 @@ class CiceGrid(BaseGrid):
         metadata: dict
             Any global or variable metadata attributes to add to the files being written
         """
+
+        if variant is not None and variant != "cice5-auscom":
+            raise NotImplementedError(f"{variant} not recognised")
 
         # Grid file
         f = nc.Dataset(grid_filename, "w")
@@ -143,9 +146,7 @@ class CiceGrid(BaseGrid):
 
         if variant == "cice5-auscom":
             angleT = self._create_2d_nc_var(f, "angleT")
-        else:  # variant==cice6
-            if variant != "cice6":
-                warn(f"{variant} not recognised, using variant='cice6'", UserWarning)
+        elif variant is None:
             angleT = self._create_2d_nc_var(f, "anglet")
 
         angleT.units = "radians"
