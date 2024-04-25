@@ -1,6 +1,5 @@
 import numpy as np
 import netCDF4 as nc
-from warnings import warn
 
 from esmgrids.base_grid import BaseGrid
 
@@ -91,6 +90,8 @@ class CiceGrid(BaseGrid):
             The name of the mask file to write
         metadata: dict
             Any global or variable metadata attributes to add to the files being written
+        variant: str
+            Use variant='cice5-auscom' for access-om2/cice5-auscom builds, otherwise use None
         """
 
         if variant is not None and variant != "cice5-auscom":
@@ -100,10 +101,12 @@ class CiceGrid(BaseGrid):
         f = nc.Dataset(grid_filename, "w")
 
         # Create dimensions.
-        f.createDimension("ni", self.num_lon_points)
-        # ni is the grid_longitude but doesn't have a value other than its index
-        f.createDimension("nj", self.num_lat_points)
-        # nj is the grid_latitude but doesn't have a value other than its index
+        f.createDimension(
+            "ni", self.num_lon_points
+        )  # ni is the grid_longitude but doesn't have a value other than its index
+        f.createDimension(
+            "nj", self.num_lat_points
+        )  # nj is the grid_latitude but doesn't have a value other than its index
 
         # Make all CICE grid variables.
         # names are based on https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html

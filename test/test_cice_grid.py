@@ -1,6 +1,5 @@
 import pytest
 import xarray as xr
-import warnings
 from numpy.testing import assert_allclose
 from numpy import deg2rad
 from subprocess import run
@@ -14,6 +13,7 @@ from esmgrids.cice_grid import CiceGrid
 # going higher resolution than 0.1 has too much computational cost
 _test_resolutions = [4, 0.1]
 
+# run test using the valid cice variants
 _variants = ["cice5-auscom", None]
 
 
@@ -254,14 +254,17 @@ def test_variant(mom_grid, tmp_path):
     mom = MomGrid.fromfile(mom_grid.path, mask_file=mom_grid.mask_path)
     cice = CiceGrid.fromgrid(mom)
 
+    # invalid variant (="andrew")
     with pytest.raises(NotImplementedError, match="andrew not recognised"):
         cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="andrew")
 
+    # valid variant (="cice5-auscom")
     try:
         cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc", variant="cice5-auscom")
     except:
         assert False, "Failed to write cice grid with valid input arguments provided"
 
+    # valid variant (default = None)
     try:
         cice.write(str(tmp_path) + "/grid2.nc", str(tmp_path) + "/kmt2.nc")
     except:

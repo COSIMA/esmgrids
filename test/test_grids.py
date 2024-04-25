@@ -3,14 +3,11 @@ import sh
 import os
 import sys
 import numpy as np
-import netCDF4 as nc
 
 my_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(my_dir, "../"))
 
-from esmgrids.mom_grid import MomGrid  # noqa
 from esmgrids.core2_grid import Core2Grid  # noqa
-from esmgrids.cice_grid import CiceGrid  # noqa
 from esmgrids.util import calc_area_of_polygons  # noqa
 
 data_tarball = "test_data.tar.gz"
