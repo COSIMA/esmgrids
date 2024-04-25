@@ -31,7 +31,11 @@ class CiceGrid(BaseGrid):
             area_t = f.variables["tarea"][:]
             area_u = f.variables["uarea"][:]
 
-            angle_t = np.rad2deg(f.variables["angleT"][:])
+            try:
+                angle_t = np.rad2deg(f.variables["anglet"][:])
+            except KeyError:
+                angle_t = np.rad2deg(f.variables["angleT"][:])
+
             angle_u = np.rad2deg(f.variables["angle"][:])
 
             if "clon_t" in f.variables:
@@ -69,12 +73,12 @@ class CiceGrid(BaseGrid):
         return f.createVariable(
             name,
             "f8",
-            dimensions=("ny", "nx"),
+            dimensions=("nj", "ni"),
             compression="zlib",
             complevel=1,
         )
 
-    def write(self, grid_filename, mask_filename, metadata=None):
+    def write(self, grid_filename, mask_filename, metadata=None, variant=None):
         """
         Write out CICE grid to netcdf
 
@@ -86,16 +90,23 @@ class CiceGrid(BaseGrid):
             The name of the mask file to write
         metadata: dict
             Any global or variable metadata attributes to add to the files being written
+        variant: str
+            Use variant='cice5-auscom' for access-om2/cice5-auscom builds, otherwise use None
         """
+
+        if variant is not None and variant != "cice5-auscom":
+            raise NotImplementedError(f"{variant} not recognised")
 
         # Grid file
         f = nc.Dataset(grid_filename, "w")
 
         # Create dimensions.
-        f.createDimension("nx", self.num_lon_points)
-        # nx is the grid_longitude but doesn't have a value other than its index
-        f.createDimension("ny", self.num_lat_points)
-        # ny is the grid_latitude but doesn't have a value other than its index
+        f.createDimension(
+            "ni", self.num_lon_points
+        )  # ni is the grid_longitude but doesn't have a value other than its index
+        f.createDimension(
+            "nj", self.num_lat_points
+        )  # nj is the grid_latitude but doesn't have a value other than its index
 
         # Make all CICE grid variables.
         # names are based on https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
@@ -135,7 +146,12 @@ class CiceGrid(BaseGrid):
         angle.standard_name = "angle_of_rotation_from_east_to_x"
         angle.coordinates = "ulat ulon"
         angle.grid_mapping = "crs"
-        angleT = self._create_2d_nc_var(f, "angleT")
+
+        if variant == "cice5-auscom":
+            angleT = self._create_2d_nc_var(f, "angleT")
+        elif variant is None:
+            angleT = self._create_2d_nc_var(f, "anglet")
+
         angleT.units = "radians"
         angleT.long_name = "Rotation angle of T cells."
         angleT.standard_name = "angle_of_rotation_from_east_to_x"
@@ -185,8 +201,8 @@ class CiceGrid(BaseGrid):
         # Mask file
         f = nc.Dataset(mask_filename, "w")
 
-        f.createDimension("nx", self.num_lon_points)
-        f.createDimension("ny", self.num_lat_points)
+        f.createDimension("ni", self.num_lon_points)
+        f.createDimension("nj", self.num_lat_points)
         mask = self._create_2d_nc_var(f, "kmt")
         mask.grid_mapping = "crs"
         mask.standard_name = "sea_binary_mask"
