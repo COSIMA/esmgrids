@@ -19,7 +19,7 @@ def calc_area_of_polygons(clons, clats):
     """
 
     areas = np.zeros(clons.shape[1:])
-    areas[:] = np.NAN
+    areas[:] = np.nan
 
     for j in range(areas.shape[0]):
         for i in range(areas.shape[1]):
@@ -36,7 +36,7 @@ def calc_area_of_polygons(clons, clats):
             cop = {"type": "Polygon", "coordinates": [zip(x, y)]}
             areas[j, i] = shape(cop).area
 
-    assert np.sum(areas) is not np.NAN
+    assert np.sum(areas) is not np.nan
     assert np.min(areas) > 0
 
     return areas

@@ -47,7 +47,7 @@ class UMGrid:
             # Set grid corners, we do these one corner at a time. Start at the
             # bottom left and go anti-clockwise. This is the OASIS convention.
             clon = np.empty((self.corners, x.shape[0], x.shape[1]))
-            clon[:] = np.NAN
+            clon[:] = np.nan
             clon[0, :, :] = x - dx
             clon[1, :, :] = x + dx
             clon[2, :, :] = x + dx
@@ -55,7 +55,7 @@ class UMGrid:
             assert not np.isnan(np.sum(clon))
 
             clat = np.empty((self.corners, x.shape[0], x.shape[1]))
-            clat[:] = np.NAN
+            clat[:] = np.nan
             clat[0, :, :] = y[:, :] - dy
             clat[1, :, :] = y[:, :] - dy
             clat[2, :, :] = y[:, :] + dy
@@ -149,7 +149,7 @@ class UMGrid:
             return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in segments(p)))
 
         areas = np.zeros_like(clons[0])
-        areas[:] = np.NAN
+        areas[:] = np.nan
 
         m = Basemap(
             projection="laea",
@@ -168,7 +168,7 @@ class UMGrid:
             for j in range(x[0, :].shape[1]):
                 areas[i, j] = area_polygon(zip(x[:, i, j], y[:, i, j]))
 
-        assert np.sum(areas) is not np.NAN
+        assert np.sum(areas) is not np.nan
         assert np.min(areas) > 0
         assert abs(1 - np.sum(areas) / EARTH_AREA) < 2e-4
 

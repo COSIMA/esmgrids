@@ -70,7 +70,7 @@ class TripolarGrid(BaseGrid):
         dx_half[:, 0] = dx_half[:, 1]
 
         clon = np.empty((self.num_lat_points, self.num_lon_points, 4))
-        clon[:] = np.NAN
+        clon[:] = np.nan
 
         clon[:, :, 0] = x - dx_half
         clon[:, :, 1] = x + dx_half
@@ -79,7 +79,7 @@ class TripolarGrid(BaseGrid):
         assert not np.isnan(np.sum(clon))
 
         clat = np.empty((self.num_lat_points, self.num_lon_points, 4))
-        clat[:] = np.NAN
+        clat[:] = np.nan
         clat[:, :, 0] = y - dy_half
         clat[:, :, 1] = y - dy_half
         clat[:, :, 2] = y + dy_half

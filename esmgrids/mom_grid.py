@@ -173,7 +173,7 @@ def make_corners(x, y):
     # Corners of t cells. Index 0 is bottom left and then
     # anti-clockwise.
     clon_t = np.empty((4, nrow, ncol))
-    clon_t[:] = np.NAN
+    clon_t[:] = np.nan
     clon_t[0, :, :] = x[0:-1:2, 0:-1:2]
     clon_t[1, :, :] = x[0:-1:2, 2::2]
     clon_t[2, :, :] = x[2::2, 2::2]
@@ -181,7 +181,7 @@ def make_corners(x, y):
     assert not np.isnan(np.sum(clon_t))
 
     clat_t = np.empty((4, nrow, ncol))
-    clat_t[:] = np.NAN
+    clat_t[:] = np.nan
     clat_t[0, :, :] = y[0:-1:2, 0:-1:2]
     clat_t[1, :, :] = y[0:-1:2, 2::2]
     clat_t[2, :, :] = y[2::2, 2::2]
@@ -197,7 +197,7 @@ def make_corners(x, y):
     # Do the easy bits first and then fix up below.
 
     clon_u = np.empty((4, nrow, ncol))
-    clon_u[:] = np.NAN
+    clon_u[:] = np.nan
     clon_u[0, 1:, 1:] = x[1:-2:2, 1:-2:2]
     clon_u[1, 1:, 1:] = x[1:-2:2, 3::2]
     clon_u[2, 1:, 1:] = x[3::2, 3::2]
@@ -223,7 +223,7 @@ def make_corners(x, y):
     assert not np.isnan(np.sum(clon_u))
 
     clat_u = np.empty((4, nrow, ncol))
-    clat_u[:] = np.NAN
+    clat_u[:] = np.nan
     clat_u[0, 1:, 1:] = y[1:-2:2, 1:-2:2]
     clat_u[1, 1:, 1:] = y[1:-2:2, 3::2]
     clat_u[2, 1:, 1:] = y[3::2, 3::2]

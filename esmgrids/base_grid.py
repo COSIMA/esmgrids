@@ -242,7 +242,7 @@ def make_corners(x, y, dx, dy):
     # Set grid corners, we do these one corner at a time. Start at the
     # bottom left and go anti-clockwise. This is the SCRIP convention.
     clon = np.empty((4, nrow, ncol))
-    clon[:] = np.NAN
+    clon[:] = np.nan
 
     clon[0, :, 1:] = x[:, 1:] - dx_half[:, :]
     clon[0, :, 0] = x[:, 0] - dx_half[:, 0]
@@ -257,7 +257,7 @@ def make_corners(x, y, dx, dy):
     assert not np.isnan(np.sum(clon))
 
     clat = np.empty((4, nrow, ncol))
-    clat[:] = np.NAN
+    clat[:] = np.nan
 
     clat[0, 1:, :] = y[1:, :] - dy_half[:, :]
     clat[0, 0, :] = y[0, :] - dy_half[0, :]
