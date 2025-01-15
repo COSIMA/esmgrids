@@ -19,7 +19,7 @@ dynamic = ["version"]
 # conda package match specifications, see here:
 # https://docs.conda.io/projects/conda-build/en/stable/resources/package-spec.html#package-match-specifications
 dependencies = [
-    "numpy",
+    "numpy<2",
     "netcdf4",
     "shapely",
     "pyproj"
