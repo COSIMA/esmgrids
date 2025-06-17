@@ -151,8 +151,8 @@ def test_cice_var_list(grids):
 
 def test_cice_dims(grids):
     # Test : Are the dim names consistent with cice history output?
-    assert set(grids["cice"].ds.dims) == set(
-        ["ni", "nj"]
+    assert set(["ni", "nj"]).issubset(
+        set(grids["cice"].ds.dims)
     ), "cice dimension names should be 'ni','nj' to be consistent with history output"
     assert grids["cice"].ds.sizes["ni"] == len(grids["test_ds"].nx)
     assert grids["cice"].ds.sizes["nj"] == len(grids["test_ds"].ny)
@@ -183,6 +183,10 @@ def test_cice_grid_attributes(grids):
         "ulon": {"standard_name": "longitude", "units": "radians"},
         "tlat": {"standard_name": "latitude", "units": "radians"},
         "tlon": {"standard_name": "longitude", "units": "radians"},
+        "ulat_bounds": {"standard_name": "latitude_bounds", "units": "degrees_north"},
+        "ulon_bounds": {"standard_name": "longitude_bounds", "units": "degrees_east"},
+        "tlat_bounds": {"standard_name": "latitude_bounds", "units": "degrees_north"},
+        "tlon_bounds": {"standard_name": "longitude_bounds", "units": "degrees_east"},
         "uarea": {
             "standard_name": "cell_area",
             "units": "m^2",
