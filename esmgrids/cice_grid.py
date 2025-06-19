@@ -49,6 +49,8 @@ class CiceGrid(BaseGrid):
         if mask_file is not None:
             with nc.Dataset(mask_file) as f:
                 mask_t = f.variables["kmt"][:]
+        else:
+            mask_t = None
 
         return cls(
             x_t=x_t,
@@ -78,6 +80,15 @@ class CiceGrid(BaseGrid):
             complevel=1,
         )
 
+    def _create_3d_nc_var(self, f, name):
+        return f.createVariable(
+            name,
+            "f8",
+            dimensions=("nj", "ni", "nvertices"),
+            compression="zlib",
+            complevel=1,
+        )
+
     def write(self, grid_filename, mask_filename, metadata=None, variant=None):
         """
         Write out CICE grid to netcdf
@@ -97,6 +108,13 @@ class CiceGrid(BaseGrid):
         if variant is not None and variant != "cice5-auscom":
             raise NotImplementedError(f"{variant} not recognised")
 
+        has_bounds = (
+            (self.clon_t is not None)
+            & (self.clat_t is not None)
+            & (self.clon_u is not None)
+            & (self.clat_u is not None)
+        )
+
         # Grid file
         f = nc.Dataset(grid_filename, "w")
 
@@ -107,6 +125,8 @@ class CiceGrid(BaseGrid):
         f.createDimension(
             "nj", self.num_lat_points
         )  # nj is the grid_latitude but doesn't have a value other than its index
+        if has_bounds:
+            f.createDimension("nvertices", 4)  # nvertices is the number of corner points
 
         # Make all CICE grid variables.
         # names are based on https://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
@@ -128,6 +148,28 @@ class CiceGrid(BaseGrid):
         tlon.units = "radians"
         tlon.long_name = "Longitude of T points"
         tlon.standard_name = "longitude"
+
+        if has_bounds:
+            ulat_bounds = self._create_3d_nc_var(f, "ulat_bounds")
+            ulat_bounds.units = "degrees_north"
+            ulat_bounds.long_name = "Latitude of U cell vertices"
+            ulat_bounds.standard_name = "latitude_bounds"
+            ulat.bounds = "ulat_bounds"
+            ulon_bounds = self._create_3d_nc_var(f, "ulon_bounds")
+            ulon_bounds.units = "degrees_east"
+            ulon_bounds.long_name = "Longitude of U cell vertices"
+            ulon_bounds.standard_name = "longitude_bounds"
+            ulon.bounds = "ulon_bounds"
+            tlat_bounds = self._create_3d_nc_var(f, "tlat_bounds")
+            tlat_bounds.units = "degrees_north"
+            tlat_bounds.long_name = "Latitude of T cell vertices"
+            tlat_bounds.standard_name = "latitude_bounds"
+            tlat.bounds = "tlat_bounds"
+            tlon_bounds = self._create_3d_nc_var(f, "tlon_bounds")
+            tlon_bounds.units = "degrees_east"
+            tlon_bounds.long_name = "Longitude of T cell vertices"
+            tlon_bounds.standard_name = "longitude_bounds"
+            tlon.bounds = "tlon_bounds"
 
         htn = self._create_2d_nc_var(f, "htn")
         htn.units = "cm"
@@ -179,6 +221,15 @@ class CiceGrid(BaseGrid):
         tlon[:] = np.deg2rad(self.x_t)
         ulat[:] = np.deg2rad(self.y_u)
         ulon[:] = np.deg2rad(self.x_u)
+
+        if has_bounds:
+            # In CICE, bounds are reported in deg, see
+            # https://github.com/ACCESS-NRI/cice5/blob/90a716400ba317fa230134c57ddaf7a84ff625d0/source/ice_grid.F90#L1968
+            # Transpose to (j, i, vertex)
+            tlat_bounds[:] = self.clat_t.transpose((1, 2, 0))
+            tlon_bounds[:] = self.clon_t.transpose((1, 2, 0))
+            ulat_bounds[:] = self.clat_u.transpose((1, 2, 0))
+            ulon_bounds[:] = self.clon_u.transpose((1, 2, 0))
 
         # Convert from m to cm.
         htn[:] = self.dx_tn[:] * 100.0

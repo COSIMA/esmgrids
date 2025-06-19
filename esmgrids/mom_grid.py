@@ -75,7 +75,7 @@ class MomGrid(BaseGrid):
                 dx_ext = np.append(dx[:], dx[:, 0:1], axis=1)
 
                 # The u-cells cross the tri-polar fold
-                dy_ext = np.append(dy[:], dy[-1:, :], axis=0)
+                dy_ext = np.append(dy[:], np.fliplr(dy[-1:, :]), axis=0)
 
                 # Through the centre of u cells
                 dx_u = dx_ext[2::2, 1::2] + dx_ext[2::2, 2::2]
@@ -95,11 +95,11 @@ class MomGrid(BaseGrid):
                 # Add up areas, going clockwise from bottom left.
                 area_t = area[0::2, 0::2] + area[1::2, 0::2] + area[1::2, 1::2] + area[0::2, 1::2]
 
-                # These need to wrap around the globe. Copy ocn_area and
-                # add an extra column at the end. Also u-cells cross the
-                # tri-polar fold so add an extra row at the top.
-                area_ext = np.append(area[:], area[:, 0:1], axis=1)
-                area_ext = np.append(area_ext[:], area_ext[-1:, :], axis=0)
+                # Extend grid over periodic boundaries as u-cells cross the eastern and northern
+                # extents of the supergrid. Add an new row at the top that is a flipped version of
+                # the top row. Then add new column to the right that is a copy of the first column.
+                area_ext = np.append(area[:], np.fliplr(area[-1:, :]), axis=0)
+                area_ext = np.append(area_ext[:], area_ext[:, :1], axis=1)
 
                 area_u = area_ext[1::2, 1::2] + area_ext[2::2, 1::2] + area_ext[2::2, 2::2] + area_ext[1::2, 2::2]
 
@@ -188,64 +188,31 @@ def make_corners(x, y):
     clat_t[3, :, :] = y[2::2, 0:-1:2]
     assert not np.isnan(np.sum(clat_t))
 
+    # Extend grid over periodic boundaries as u-cells cross the eastern and northern extents of
+    # the supergrid. Add an new row at the top that is a flipped version of the
+    # second-to-top row. Then add new column to the right that is a copy of the second column.
+    x_ext = np.append(x[:], np.fliplr(x[-2:-1, :]), axis=0)
+    x_ext = np.append(x_ext[:], x_ext[:, 1:2], axis=1)
+
+    y_ext = np.append(y[:], np.fliplr(y[-2:-1, :]), axis=0)
+    y_ext = np.append(y_ext[:], y_ext[:, 1:2], axis=1)
+
     # Corners of u cells. Index 0 is bottom left and then
     # anti-clockwise.
-
-    # Need to be careful with the edges.
-    # - Make the South most row of cells half size in the vertical.
-    # - West needs to wrap around.
-    # Do the easy bits first and then fix up below.
-
     clon_u = np.empty((4, nrow, ncol))
     clon_u[:] = np.NAN
-    clon_u[0, 1:, 1:] = x[1:-2:2, 1:-2:2]
-    clon_u[1, 1:, 1:] = x[1:-2:2, 3::2]
-    clon_u[2, 1:, 1:] = x[3::2, 3::2]
-    clon_u[3, 1:, 1:] = x[3::2, 1:-2:2]
-
-    # Fix up bottom row excluding left most column
-    clon_u[0, 0, 1:] = x[0, 1:-2:2]
-    clon_u[1, 0, 1:] = x[0, 3::2]
-    clon_u[2, 0, 1:] = x[1, 3::2]
-    clon_u[3, 0, 1:] = x[1, 1:-2:2]
-
-    # Fix up leftmost column excluding bottom row
-    clon_u[0, 1:, 0] = x[1:-2:2, -1]
-    clon_u[1, 1:, 0] = x[1:-2:2, 1]
-    clon_u[2, 1:, 0] = x[3::2, 1]
-    clon_u[3, 1:, 0] = x[3::2, -1]
-
-    # Fix up the bottom left corner point
-    clon_u[0, 0, 0] = x[0, -1]
-    clon_u[1, 0, 0] = x[0, 1]
-    clon_u[2, 0, 0] = x[1, 1]
-    clon_u[3, 0, 0] = x[1, -1]
+    clon_u[0, :, :] = x_ext[1:-1:2, 1:-1:2]
+    clon_u[1, :, :] = x_ext[1:-1:2, 3::2]
+    clon_u[2, :, :] = x_ext[3::2, 3::2]
+    clon_u[3, :, :] = x_ext[3::2, 1:-1:2]
     assert not np.isnan(np.sum(clon_u))
 
     clat_u = np.empty((4, nrow, ncol))
     clat_u[:] = np.NAN
-    clat_u[0, 1:, 1:] = y[1:-2:2, 1:-2:2]
-    clat_u[1, 1:, 1:] = y[1:-2:2, 3::2]
-    clat_u[2, 1:, 1:] = y[3::2, 3::2]
-    clat_u[3, 1:, 1:] = y[3::2, 1:-2:2]
-
-    # Fix up bottom row excluding left most column
-    clat_u[0, 0, 1:] = y[0, 1:-2:2]
-    clat_u[1, 0, 1:] = y[0, 3::2]
-    clat_u[2, 0, 1:] = y[1, 3::2]
-    clat_u[3, 0, 1:] = y[1, 1:-2:2]
-
-    # Fix up leftmost column excluding bottom row
-    clat_u[0, 1:, 0] = y[1:-2:2, -1]
-    clat_u[1, 1:, 0] = y[1:-2:2, 1]
-    clat_u[2, 1:, 0] = y[3::2, 1]
-    clat_u[3, 1:, 0] = y[3::2, -1]
-
-    # Fix up the bottom left corner point
-    clat_u[0, 0, 0] = y[0, -1]
-    clat_u[1, 0, 0] = y[0, 1]
-    clat_u[2, 0, 0] = y[1, 1]
-    clat_u[3, 0, 0] = y[1, -1]
+    clat_u[0, :, :] = y_ext[1:-1:2, 1:-1:2]
+    clat_u[1, :, :] = y_ext[1:-1:2, 3::2]
+    clat_u[2, :, :] = y_ext[3::2, 3::2]
+    clat_u[3, :, :] = y_ext[3::2, 1:-1:2]
     assert not np.isnan(np.sum(clat_u))
 
     return clat_t, clon_t, clat_u, clon_u, None, None
